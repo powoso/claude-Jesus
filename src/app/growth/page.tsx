@@ -15,6 +15,7 @@ import { Modal } from '@/components/ui/Modal';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useApp } from '@/contexts/AppContext';
+import { useToast } from '@/components/ui/Toast';
 import { getWeekNumber, getEncouragementMessage } from '@/lib/utils';
 
 const categories = [
@@ -27,6 +28,7 @@ const categories = [
 
 export default function GrowthPage() {
   const { weeklyCheckIns, addWeeklyCheckIn } = useApp();
+  const { showToast } = useToast();
   const [showAddModal, setShowAddModal] = useState(false);
   const [ratings, setRatings] = useState({
     prayerLife: 3,
@@ -85,6 +87,7 @@ export default function GrowthPage() {
     });
     setRatings({ prayerLife: 3, scriptureReading: 3, worship: 3, service: 3, fellowship: 3 });
     setShowAddModal(false);
+    showToast('Weekly check-in saved');
   };
 
   // Monthly summary

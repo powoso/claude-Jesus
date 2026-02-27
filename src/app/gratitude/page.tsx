@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Plus, Filter, Trash2, Calendar, BookOpen } from 'lucide-react';
+import { Heart, Plus, Trash2, Calendar, BookOpen, Pencil } from 'lucide-react';
 import { AppLayout } from '@/components/navigation/AppLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +11,7 @@ import { Modal } from '@/components/ui/Modal';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useApp } from '@/contexts/AppContext';
+import { useToast } from '@/components/ui/Toast';
 import { GratitudeEntry } from '@/lib/types';
 import { formatShortDate } from '@/lib/utils';
 
@@ -18,19 +19,26 @@ const pastelClasses = ['pastel-rose', 'pastel-sky', 'pastel-emerald', 'pastel-am
 const categoryOptions: GratitudeEntry['category'][] = ['Gratitude', 'Praise', 'Worship'];
 
 export default function GratitudePage() {
-  const { gratitudeEntries, addGratitudeEntry, deleteGratitudeEntry } = useApp();
+  const { gratitudeEntries, addGratitudeEntry, updateGratitudeEntry, deleteGratitudeEntry } = useApp();
+  const { showToast } = useToast();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<string | null>(null);
   const [filterMonth, setFilterMonth] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [newText, setNewText] = useState('');
   const [newScripture, setNewScripture] = useState('');
   const [newCategory, setNewCategory] = useState<GratitudeEntry['category']>('Gratitude');
 
+  // Edit state
+  const [editText, setEditText] = useState('');
+  const [editScripture, setEditScripture] = useState('');
+  const [editCategory, setEditCategory] = useState<GratitudeEntry['category']>('Gratitude');
+
   // "This time last year" feature
   const lastYearEntries = useMemo(() => {
     const today = new Date();
     const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
-    const range = 3 * 86400000; // 3 days range
+    const range = 3 * 86400000;
     return gratitudeEntries.filter(e => {
       const eDate = new Date(e.date);
       return Math.abs(eDate.getTime() - oneYearAgo.getTime()) < range;
@@ -69,6 +77,25 @@ export default function GratitudePage() {
     setNewScripture('');
     setNewCategory('Gratitude');
     setShowAddModal(false);
+    showToast('Gratitude entry added');
+  };
+
+  const openEditModal = (entry: GratitudeEntry) => {
+    setEditingEntry(entry.id);
+    setEditText(entry.text);
+    setEditScripture(entry.scriptureReference || '');
+    setEditCategory(entry.category);
+  };
+
+  const handleEdit = () => {
+    if (!editingEntry || !editText.trim()) return;
+    updateGratitudeEntry(editingEntry, {
+      text: editText.trim(),
+      scriptureReference: editScripture.trim() || undefined,
+      category: editCategory,
+    });
+    setEditingEntry(null);
+    showToast('Entry updated');
   };
 
   return (
@@ -163,7 +190,14 @@ export default function GratitudePage() {
                       {entry.category}
                     </span>
                     <button
-                      onClick={() => deleteGratitudeEntry(entry.id)}
+                      onClick={() => openEditModal(entry)}
+                      className="p-1 rounded-lg hover:bg-white/50 dark:hover:bg-black/20 text-[var(--text-muted)]"
+                      aria-label="Edit entry"
+                    >
+                      <Pencil size={12} />
+                    </button>
+                    <button
+                      onClick={() => { deleteGratitudeEntry(entry.id); showToast('Entry removed'); }}
                       className="p-1 rounded-lg hover:bg-white/50 dark:hover:bg-black/20 text-[var(--text-muted)]"
                       aria-label="Delete entry"
                     >
@@ -208,6 +242,34 @@ export default function GratitudePage() {
           <Button onClick={handleAdd} className="w-full" variant="gold">
             <Heart size={16} />
             Add to Wall
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal isOpen={!!editingEntry} onClose={() => setEditingEntry(null)} title="Edit Entry">
+        <div className="space-y-4">
+          <TextArea
+            label="Gratitude Text"
+            placeholder="What are you thankful for?"
+            rows={4}
+            value={editText}
+            onChange={(e) => setEditText(e.target.value)}
+          />
+          <Input
+            label="Scripture Reference (optional)"
+            placeholder="e.g., Psalm 136:1"
+            value={editScripture}
+            onChange={(e) => setEditScripture(e.target.value)}
+          />
+          <Select
+            label="Category"
+            options={categoryOptions.map(c => ({ value: c, label: c }))}
+            value={editCategory}
+            onChange={(e) => setEditCategory(e.target.value as GratitudeEntry['category'])}
+          />
+          <Button onClick={handleEdit} className="w-full">
+            Save Changes
           </Button>
         </div>
       </Modal>

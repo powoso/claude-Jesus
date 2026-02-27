@@ -8,8 +8,9 @@ import {
   GratitudeEntry,
   WeeklyCheckIn,
   AppSettings,
+  JournalEntry,
 } from '@/lib/types';
-import { generateId } from '@/lib/utils';
+import { generateId, getDateKey } from '@/lib/utils';
 
 interface AppState {
   settings: AppSettings;
@@ -32,7 +33,12 @@ interface AppState {
 
   gratitudeEntries: GratitudeEntry[];
   addGratitudeEntry: (entry: Omit<GratitudeEntry, 'id' | 'date'>) => void;
+  updateGratitudeEntry: (id: string, updates: Partial<GratitudeEntry>) => void;
   deleteGratitudeEntry: (id: string) => void;
+
+  journalEntries: JournalEntry[];
+  saveJournalEntry: (dateKey: string, text: string, verseId: number) => void;
+  getJournalEntry: (dateKey: string) => JournalEntry | undefined;
 
   weeklyCheckIns: WeeklyCheckIn[];
   addWeeklyCheckIn: (checkIn: Omit<WeeklyCheckIn, 'id'>) => void;
@@ -59,6 +65,7 @@ const KEYS = {
   weeklyCheckIns: 'dw-weekly-checkins',
   prayerDates: 'dw-prayer-dates',
   memoryPracticeDates: 'dw-memory-practice-dates',
+  journal: 'dw-journal',
 } as const;
 
 function loadFromStorage<T>(key: string, fallback: T): T {
@@ -98,15 +105,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [weeklyCheckIns, setWeeklyCheckIns] = useState<WeeklyCheckIn[]>([]);
   const [prayerDates, setPrayerDates] = useState<string[]>([]);
   const [memoryPracticeDates, setMemoryPracticeDates] = useState<string[]>([]);
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
 
   // Ref always holds the latest state for the beforeunload flush
   const stateRef = useRef({
     settings, prayers, readingProgress, memoryVerses,
-    gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates,
+    gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries,
   });
   stateRef.current = {
     settings, prayers, readingProgress, memoryVerses,
-    gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates,
+    gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries,
   };
 
   const markSaved = useCallback(() => setLastSaved(new Date()), []);
@@ -121,6 +129,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setWeeklyCheckIns(loadFromStorage(KEYS.weeklyCheckIns, []));
     setPrayerDates(loadFromStorage(KEYS.prayerDates, []));
     setMemoryPracticeDates(loadFromStorage(KEYS.memoryPracticeDates, []));
+    setJournalEntries(loadFromStorage(KEYS.journal, []));
     setIsHydrated(true);
   }, []);
 
@@ -136,6 +145,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       saveToStorage(KEYS.weeklyCheckIns, s.weeklyCheckIns);
       saveToStorage(KEYS.prayerDates, s.prayerDates);
       saveToStorage(KEYS.memoryPracticeDates, s.memoryPracticeDates);
+      saveToStorage(KEYS.journal, s.journalEntries);
     };
 
     const onVisChange = () => {
@@ -165,6 +175,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           case KEYS.weeklyCheckIns: setWeeklyCheckIns(val); break;
           case KEYS.prayerDates: setPrayerDates(val); break;
           case KEYS.memoryPracticeDates: setMemoryPracticeDates(val); break;
+          case KEYS.journal: setJournalEntries(val); break;
         }
       } catch { /* ignore parse errors from other apps */ }
     };
@@ -291,6 +302,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       lastReviewed: new Date().toISOString(),
       addedDate: new Date().toISOString(),
       practiceCount: 0,
+      interval: 0,
+      easeFactor: 2.5,
     };
     setMemoryVerses(prev => {
       const next = [newVerse, ...prev];
@@ -339,6 +352,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [markSaved]);
 
+  const updateGratitudeEntry = useCallback((id: string, updates: Partial<GratitudeEntry>) => {
+    setGratitudeEntries(prev => {
+      const next = prev.map(e => e.id === id ? { ...e, ...updates } : e);
+      saveToStorage(KEYS.gratitude, next);
+      markSaved();
+      return next;
+    });
+  }, [markSaved]);
+
   const deleteGratitudeEntry = useCallback((id: string) => {
     setGratitudeEntries(prev => {
       const next = prev.filter(e => e.id !== id);
@@ -347,6 +369,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return next;
     });
   }, [markSaved]);
+
+  const saveJournalEntry = useCallback((dateKey: string, text: string, verseId: number) => {
+    setJournalEntries(prev => {
+      const existing = prev.find(e => e.dateKey === dateKey);
+      let next: JournalEntry[];
+      if (existing) {
+        next = prev.map(e => e.dateKey === dateKey
+          ? { ...e, text, verseId, updatedAt: new Date().toISOString() }
+          : e
+        );
+      } else {
+        next = [{
+          id: generateId(),
+          dateKey,
+          text,
+          verseId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }, ...prev];
+      }
+      saveToStorage(KEYS.journal, next);
+      markSaved();
+      return next;
+    });
+  }, [markSaved]);
+
+  const getJournalEntry = useCallback((dateKey: string): JournalEntry | undefined => {
+    return journalEntries.find(e => e.dateKey === dateKey);
+  }, [journalEntries]);
 
   const addWeeklyCheckIn = useCallback((checkIn: Omit<WeeklyCheckIn, 'id'>) => {
     const newCheckIn: WeeklyCheckIn = { ...checkIn, id: generateId() };
@@ -368,9 +419,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       weeklyCheckIns,
       prayerDates,
       memoryPracticeDates,
+      journalEntries,
       exportDate: new Date().toISOString(),
     }, null, 2);
-  }, [settings, prayers, readingProgress, memoryVerses, gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates]);
+  }, [settings, prayers, readingProgress, memoryVerses, gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries]);
 
   const importData = useCallback((json: string): boolean => {
     try {
@@ -384,6 +436,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (data.weeklyCheckIns) { setWeeklyCheckIns(data.weeklyCheckIns); saveToStorage(KEYS.weeklyCheckIns, data.weeklyCheckIns); }
       if (data.prayerDates) { setPrayerDates(data.prayerDates); saveToStorage(KEYS.prayerDates, data.prayerDates); }
       if (data.memoryPracticeDates) { setMemoryPracticeDates(data.memoryPracticeDates); saveToStorage(KEYS.memoryPracticeDates, data.memoryPracticeDates); }
+      if (data.journalEntries) { setJournalEntries(data.journalEntries); saveToStorage(KEYS.journal, data.journalEntries); }
       markSaved();
       return true;
     } catch {
@@ -409,7 +462,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       deleteMemoryVerse,
       gratitudeEntries,
       addGratitudeEntry,
+      updateGratitudeEntry,
       deleteGratitudeEntry,
+      journalEntries,
+      saveJournalEntry,
+      getJournalEntry,
       weeklyCheckIns,
       addWeeklyCheckIn,
       prayerDates,

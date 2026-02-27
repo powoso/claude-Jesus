@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Brain, Plus, Eye, EyeOff, RotateCcw, Star, Award,
-  BookOpen, Trash2, ArrowRight, Check, X
+  Brain, Plus, Eye, EyeOff, Star,
+  Trash2, Check, X, Clock
 } from 'lucide-react';
 import { AppLayout } from '@/components/navigation/AppLayout';
 import { Card } from '@/components/ui/Card';
@@ -16,8 +16,9 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { StreakBadge } from '@/components/ui/StreakBadge';
 import { useApp } from '@/contexts/AppContext';
+import { useToast } from '@/components/ui/Toast';
 import { MemoryVerse } from '@/lib/types';
-import { getStreakCount } from '@/lib/utils';
+import { getStreakCount, sm2, isDueForReview } from '@/lib/utils';
 
 type PracticeMode = 'first-letter' | 'fill-blank' | 'full-recall';
 
@@ -46,6 +47,7 @@ function getFillInBlank(text: string): { display: string; blanks: string[] } {
 
 export default function MemoryPage() {
   const { memoryVerses, addMemoryVerse, updateMemoryVerse, deleteMemoryVerse, memoryPracticeDates } = useApp();
+  const { showToast } = useToast();
   const [showAddModal, setShowAddModal] = useState(false);
   const [practiceVerse, setPracticeVerse] = useState<MemoryVerse | null>(null);
   const [practiceMode, setPracticeMode] = useState<PracticeMode>('first-letter');
@@ -56,14 +58,30 @@ export default function MemoryPage() {
 
   const streak = getStreakCount(memoryPracticeDates);
 
-  // Priority review queue: learning > familiar > memorized, then oldest reviewed first
-  const reviewQueue = useMemo(() => {
+  // Spaced repetition review queue: show verses that are due for review first
+  const { dueVerses, upcomingVerses } = useMemo(() => {
+    const due: MemoryVerse[] = [];
+    const upcoming: MemoryVerse[] = [];
+    memoryVerses.forEach(v => {
+      const interval = v.interval || 0;
+      if (isDueForReview(v.lastReviewed, interval)) {
+        due.push(v);
+      } else {
+        upcoming.push(v);
+      }
+    });
     const priority = { Learning: 0, Familiar: 1, Memorized: 2 };
-    return [...memoryVerses].sort((a, b) => {
+    due.sort((a, b) => {
       const pDiff = priority[a.mastery] - priority[b.mastery];
       if (pDiff !== 0) return pDiff;
       return new Date(a.lastReviewed).getTime() - new Date(b.lastReviewed).getTime();
     });
+    upcoming.sort((a, b) => {
+      const aNext = new Date(a.lastReviewed).getTime() + (a.interval || 0) * 86400000;
+      const bNext = new Date(b.lastReviewed).getTime() + (b.interval || 0) * 86400000;
+      return aNext - bNext;
+    });
+    return { dueVerses: due, upcomingVerses: upcoming };
   }, [memoryVerses]);
 
   const handleAddVerse = () => {
@@ -72,6 +90,7 @@ export default function MemoryPage() {
     setNewReference('');
     setNewText('');
     setShowAddModal(false);
+    showToast('Verse added to collection');
   };
 
   const startPractice = (verse: MemoryVerse, mode: PracticeMode) => {
@@ -82,16 +101,31 @@ export default function MemoryPage() {
   };
 
   const completePractice = (verse: MemoryVerse, success: boolean) => {
+    const quality = success ? 4 : 1;
+    const currentInterval = verse.interval || 0;
+    const currentEase = verse.easeFactor || 2.5;
+    const { interval: newInterval, easeFactor: newEase } = sm2(quality, currentInterval, currentEase);
+
     const newCount = verse.practiceCount + 1;
     let newMastery = verse.mastery;
     if (success && newCount >= 10) newMastery = 'Memorized';
     else if (success && newCount >= 4) newMastery = 'Familiar';
+    else if (!success) newMastery = 'Learning';
+
     updateMemoryVerse(verse.id, {
       practiceCount: newCount,
       mastery: newMastery,
       lastReviewed: new Date().toISOString(),
+      interval: newInterval,
+      easeFactor: newEase,
     });
     setPracticeVerse(null);
+
+    if (success) {
+      showToast(newInterval > 1 ? `Next review in ${newInterval} days` : 'Review again tomorrow');
+    } else {
+      showToast('Keep practicing \u2014 you\'ll get it!');
+    }
   };
 
   const fillBlankData = useMemo(() => {
@@ -99,11 +133,16 @@ export default function MemoryPage() {
     return getFillInBlank(practiceVerse.text);
   }, [practiceVerse, practiceMode]);
 
+  const getDaysUntilReview = (verse: MemoryVerse): number => {
+    const nextReview = new Date(verse.lastReviewed).getTime() + (verse.interval || 0) * 86400000;
+    return Math.max(0, Math.ceil((nextReview - Date.now()) / 86400000));
+  };
+
   return (
     <AppLayout>
       <PageHeader
         title="Scripture Memory"
-        subtitle="I have hidden your word in my heart — Psalm 119:11"
+        subtitle="I have hidden your word in my heart \u2014 Psalm 119:11"
         icon={<Brain size={28} />}
         action={
           <div className="flex items-center gap-3">
@@ -116,25 +155,27 @@ export default function MemoryPage() {
         }
       />
 
-      {/* Quick Start: Review Queue */}
-      {reviewQueue.length > 0 && !practiceVerse && (
+      {/* Quick Start: Due for Review */}
+      {dueVerses.length > 0 && !practiceVerse && (
         <Card className="mb-6 bg-[var(--accent)]/5 border-[var(--accent)]/20">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="font-heading font-semibold text-[var(--text-primary)] mb-1">Daily Review</h3>
+              <h3 className="font-heading font-semibold text-[var(--text-primary)] mb-1">
+                {dueVerses.length} verse{dueVerses.length !== 1 ? 's' : ''} due for review
+              </h3>
               <p className="text-sm text-[var(--text-secondary)]">
-                {reviewQueue.length} verse{reviewQueue.length !== 1 ? 's' : ''} ready for review.
-                Next: <span className="font-medium">{reviewQueue[0].reference}</span>
+                Next: <span className="font-medium">{dueVerses[0].reference}</span>
+                <span className="text-xs text-[var(--text-muted)] ml-2">({dueVerses[0].mastery})</span>
               </p>
             </div>
             <div className="flex gap-2 flex-wrap">
-              <Button size="sm" onClick={() => startPractice(reviewQueue[0], 'first-letter')}>
+              <Button size="sm" onClick={() => startPractice(dueVerses[0], 'first-letter')}>
                 First Letter
               </Button>
-              <Button size="sm" variant="secondary" onClick={() => startPractice(reviewQueue[0], 'fill-blank')}>
+              <Button size="sm" variant="secondary" onClick={() => startPractice(dueVerses[0], 'fill-blank')}>
                 Fill Blank
               </Button>
-              <Button size="sm" variant="secondary" onClick={() => startPractice(reviewQueue[0], 'full-recall')}>
+              <Button size="sm" variant="secondary" onClick={() => startPractice(dueVerses[0], 'full-recall')}>
                 Full Recall
               </Button>
             </div>
@@ -174,11 +215,7 @@ export default function MemoryPage() {
                     {showAnswer ? practiceVerse.text : getFirstLetterHint(practiceVerse.text)}
                   </p>
                   <div className="flex gap-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setShowAnswer(!showAnswer)}
-                    >
+                    <Button variant="secondary" size="sm" onClick={() => setShowAnswer(!showAnswer)}>
                       {showAnswer ? <EyeOff size={14} /> : <Eye size={14} />}
                       {showAnswer ? 'Hide' : 'Reveal'}
                     </Button>
@@ -202,11 +239,7 @@ export default function MemoryPage() {
                     {showAnswer ? practiceVerse.text : fillBlankData.display}
                   </p>
                   <div className="flex gap-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setShowAnswer(!showAnswer)}
-                    >
+                    <Button variant="secondary" size="sm" onClick={() => setShowAnswer(!showAnswer)}>
                       {showAnswer ? <EyeOff size={14} /> : <Eye size={14} />}
                       {showAnswer ? 'Hide' : 'Reveal'}
                     </Button>
@@ -288,44 +321,100 @@ export default function MemoryPage() {
         />
       ) : (
         <div className="space-y-3">
-          <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)] mb-3">
-            Your Verses ({memoryVerses.length})
-          </h2>
-          {memoryVerses.map((verse, i) => (
-            <motion.div
-              key={verse.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.04 }}
-            >
-              <Card>
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <h3 className="font-heading font-semibold text-[var(--accent)]">{verse.reference}</h3>
-                  <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${masteryColors[verse.mastery]}`}>
-                    {verse.mastery}
-                  </span>
-                </div>
-                <p className="font-scripture text-sm text-[var(--text-secondary)] mb-4 line-clamp-2">{verse.text}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-[var(--text-muted)]">
-                    Practiced {verse.practiceCount} time{verse.practiceCount !== 1 ? 's' : ''}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => startPractice(verse, 'first-letter')}>
-                      Practice
-                    </Button>
-                    <button
-                      onClick={() => deleteMemoryVerse(verse.id)}
-                      className="p-1.5 rounded-lg hover:bg-[var(--bg-secondary)] text-[var(--text-muted)]"
-                      aria-label="Delete verse"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
-          ))}
+          {dueVerses.length > 0 && (
+            <>
+              <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)] mb-3">
+                Due for Review ({dueVerses.length})
+              </h2>
+              {dueVerses.map((verse, i) => (
+                <motion.div
+                  key={verse.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04 }}
+                >
+                  <Card className="border-[var(--accent)]/20">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <h3 className="font-heading font-semibold text-[var(--accent)]">{verse.reference}</h3>
+                      <div className="flex items-center gap-2">
+                        <Star size={14} className="text-amber-500" />
+                        <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${masteryColors[verse.mastery]}`}>
+                          {verse.mastery}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="font-scripture text-sm text-[var(--text-secondary)] mb-4 line-clamp-2">{verse.text}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-[var(--text-muted)]">
+                        Practiced {verse.practiceCount} time{verse.practiceCount !== 1 ? 's' : ''}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => startPractice(verse, 'first-letter')}>
+                          Practice
+                        </Button>
+                        <button
+                          onClick={() => { deleteMemoryVerse(verse.id); showToast('Verse removed'); }}
+                          className="p-1.5 rounded-lg hover:bg-[var(--bg-secondary)] text-[var(--text-muted)]"
+                          aria-label="Delete verse"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
+            </>
+          )}
+
+          {upcomingVerses.length > 0 && (
+            <>
+              <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)] mb-3 mt-6">
+                Upcoming ({upcomingVerses.length})
+              </h2>
+              {upcomingVerses.map((verse, i) => {
+                const daysUntil = getDaysUntilReview(verse);
+                return (
+                  <motion.div
+                    key={verse.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                  >
+                    <Card>
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <h3 className="font-heading font-semibold text-[var(--accent)]">{verse.reference}</h3>
+                        <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${masteryColors[verse.mastery]}`}>
+                          {verse.mastery}
+                        </span>
+                      </div>
+                      <p className="font-scripture text-sm text-[var(--text-secondary)] mb-4 line-clamp-2">{verse.text}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-[var(--text-muted)] flex items-center gap-1">
+                          <Clock size={12} />
+                          {daysUntil === 0 ? 'Review today' :
+                           daysUntil === 1 ? 'Review tomorrow' :
+                           `Review in ${daysUntil} days`}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => startPractice(verse, 'first-letter')}>
+                            Practice
+                          </Button>
+                          <button
+                            onClick={() => { deleteMemoryVerse(verse.id); showToast('Verse removed'); }}
+                            className="p-1.5 rounded-lg hover:bg-[var(--bg-secondary)] text-[var(--text-muted)]"
+                            aria-label="Delete verse"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </>
+          )}
         </div>
       )}
 

@@ -63,6 +63,20 @@ export interface MemoryVerse {
   lastReviewed: string;
   addedDate: string;
   practiceCount: number;
+  /** Spaced repetition interval in days — next review due at lastReviewed + interval */
+  interval: number;
+  /** Ease factor for SM-2 algorithm (default 2.5) */
+  easeFactor: number;
+}
+
+export interface JournalEntry {
+  id: string;
+  /** Day-of-year key like "2026-58" for consistent lookup */
+  dateKey: string;
+  text: string;
+  verseId: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface GratitudeEntry {

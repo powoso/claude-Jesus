@@ -82,6 +82,44 @@ export function copyToClipboard(text: string): Promise<void> {
   return Promise.resolve();
 }
 
+/**
+ * SM-2 spaced repetition algorithm.
+ * @param quality 0-5 rating (0-2 = fail, 3 = hard, 4 = good, 5 = easy)
+ * @param prevInterval previous interval in days
+ * @param prevEaseFactor previous ease factor
+ * @returns { interval, easeFactor }
+ */
+export function sm2(quality: number, prevInterval: number, prevEaseFactor: number): { interval: number; easeFactor: number } {
+  let interval: number;
+  let easeFactor = prevEaseFactor;
+
+  if (quality < 3) {
+    // Failed — reset to beginning
+    interval = 1;
+  } else {
+    if (prevInterval === 0) interval = 1;
+    else if (prevInterval === 1) interval = 3;
+    else interval = Math.round(prevInterval * easeFactor);
+  }
+
+  // Adjust ease factor (min 1.3)
+  easeFactor = Math.max(1.3, easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
+
+  return { interval, easeFactor };
+}
+
+/** Generate a date key like "2026-58" for a given date */
+export function getDateKey(date: Date = new Date()): string {
+  return `${date.getFullYear()}-${getDayOfYear(date)}`;
+}
+
+/** Check if a verse is due for review based on spaced repetition */
+export function isDueForReview(lastReviewed: string, interval: number): boolean {
+  const last = new Date(lastReviewed);
+  const due = new Date(last.getTime() + interval * 86400000);
+  return new Date() >= due;
+}
+
 export function getEncouragementMessage(trend: 'up' | 'down' | 'stable'): string {
   const upMessages = [
     "Wonderful growth! God is doing amazing things in your life.",

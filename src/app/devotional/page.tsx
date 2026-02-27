@@ -1,19 +1,25 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Share2, Check, Home } from 'lucide-react';
+import {
+  ChevronLeft, ChevronRight, Share2, Check, Home,
+  BookOpen, Flame, Brain, BookHeart, PenLine, Save
+} from 'lucide-react';
 import { AppLayout } from '@/components/navigation/AppLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { useApp } from '@/contexts/AppContext';
+import { useToast } from '@/components/ui/Toast';
 import { dailyVerses, devotionalReflections } from '@/data/verses';
-import { getDayOfYear, formatDate, copyToClipboard } from '@/lib/utils';
+import { getDayOfYear, formatDate, copyToClipboard, getStreakCount, getDateKey } from '@/lib/utils';
 
 export default function DevotionalPage() {
+  const { prayerDates, memoryPracticeDates, readingProgress, saveJournalEntry, getJournalEntry } = useApp();
+  const { showToast } = useToast();
   const today = new Date();
   const [dayOffset, setDayOffset] = useState(0);
-  const [copied, setCopied] = useState(false);
 
   const currentDate = useMemo(() => {
     const d = new Date(today);
@@ -25,15 +31,53 @@ export default function DevotionalPage() {
   const verseIndex = ((dayOfYear - 1) % dailyVerses.length + dailyVerses.length) % dailyVerses.length;
   const verse = dailyVerses[verseIndex];
   const questions = devotionalReflections[verse.theme] || devotionalReflections['Faith'];
+  const dateKey = getDateKey(currentDate);
+
+  // Journal state
+  const existingEntry = getJournalEntry(dateKey);
+  const [journalText, setJournalText] = useState(existingEntry?.text || '');
+  const [journalDirty, setJournalDirty] = useState(false);
+
+  // Sync journal text when navigating days
+  useEffect(() => {
+    const entry = getJournalEntry(dateKey);
+    setJournalText(entry?.text || '');
+    setJournalDirty(false);
+  }, [dateKey, getJournalEntry]);
 
   const handleShare = async () => {
     const text = `"${verse.text}" — ${verse.reference}\n\nFrom Daily Walk Devotional`;
     await copyToClipboard(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    showToast('Verse copied to clipboard!');
   };
 
+  const handleSaveJournal = () => {
+    if (!journalText.trim()) return;
+    saveJournalEntry(dateKey, journalText.trim(), verse.id);
+    setJournalDirty(false);
+    showToast('Journal entry saved');
+  };
+
+  // Streak calculations
+  const prayerStreak = getStreakCount(prayerDates);
+  const memoryStreak = getStreakCount(memoryPracticeDates);
+  const readingStreak = useMemo(() => {
+    const allDates: string[] = [];
+    readingProgress.forEach(p => {
+      p.completedDays.forEach(() => {
+        allDates.push(p.startDate);
+      });
+    });
+    return allDates.length > 0 ? Math.min(getStreakCount(allDates), 99) : 0;
+  }, [readingProgress]);
+
   const isToday = dayOffset === 0;
+
+  const streaks = [
+    { icon: <BookHeart size={16} />, label: 'Prayer', count: prayerStreak },
+    { icon: <BookOpen size={16} />, label: 'Reading', count: readingStreak },
+    { icon: <Brain size={16} />, label: 'Memory', count: memoryStreak },
+  ];
 
   return (
     <AppLayout>
@@ -42,6 +86,33 @@ export default function DevotionalPage() {
         subtitle="Draw near to God, and He will draw near to you."
         icon={<Home size={28} />}
       />
+
+      {/* Daily Streak Dashboard */}
+      {isToday && (prayerStreak > 0 || readingStreak > 0 || memoryStreak > 0) && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <Card className="bg-[var(--accent)]/5 border-[var(--accent)]/20">
+            <div className="flex items-center gap-2 mb-3">
+              <Flame size={16} className="text-amber-500" />
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Your Streaks</h3>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {streaks.map(s => (
+                <div key={s.label} className="text-center p-3 rounded-xl bg-[var(--bg-card)]">
+                  <div className="flex items-center justify-center gap-1.5 text-[var(--accent)] mb-1">
+                    {s.icon}
+                    <span className="text-xl font-bold">{s.count}</span>
+                  </div>
+                  <p className="text-xs text-[var(--text-muted)]">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Date Navigation */}
       <div className="flex items-center justify-between mb-8">
@@ -111,8 +182,8 @@ export default function DevotionalPage() {
                 onClick={handleShare}
                 aria-label="Copy verse to clipboard"
               >
-                {copied ? <Check size={16} /> : <Share2 size={16} />}
-                {copied ? 'Copied!' : 'Share This Verse'}
+                <Share2 size={16} />
+                Share This Verse
               </Button>
             </div>
           </Card>
@@ -140,6 +211,39 @@ export default function DevotionalPage() {
                 </motion.div>
               ))}
             </div>
+          </Card>
+
+          {/* Personal Journal */}
+          <Card>
+            <div className="flex items-center gap-2 mb-4">
+              <PenLine size={18} className="text-[var(--accent)]" />
+              <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
+                My Journal
+              </h2>
+              {existingEntry && !journalDirty && (
+                <span className="text-xs text-[var(--text-muted)] ml-auto">Saved</span>
+              )}
+            </div>
+            <textarea
+              value={journalText}
+              onChange={(e) => { setJournalText(e.target.value); setJournalDirty(true); }}
+              placeholder="Write your thoughts, prayers, and reflections on today's verse..."
+              rows={5}
+              className="w-full px-4 py-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none font-scripture text-sm leading-relaxed"
+              aria-label="Journal entry"
+            />
+            {journalDirty && journalText.trim() && (
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-3 flex justify-end"
+              >
+                <Button size="sm" onClick={handleSaveJournal}>
+                  <Save size={14} />
+                  Save Entry
+                </Button>
+              </motion.div>
+            )}
           </Card>
 
           {/* Encouragement */}

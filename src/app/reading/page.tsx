@@ -14,11 +14,13 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useApp } from '@/contexts/AppContext';
+import { useToast } from '@/components/ui/Toast';
 import { readingPlans } from '@/data/reading-plans';
 import { formatShortDate } from '@/lib/utils';
 
 export default function ReadingPage() {
   const { readingProgress, startPlan, toggleReadingDay, resetPlan } = useApp();
+  const { showToast } = useToast();
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
 
   const selectedPlan = selectedPlanId ? readingPlans.find(p => p.id === selectedPlanId) : null;
@@ -74,7 +76,7 @@ export default function ReadingPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    if (confirm('Reset all progress for this plan?')) resetPlan(selectedPlan.id);
+                    if (confirm('Reset all progress for this plan?')) { resetPlan(selectedPlan.id); showToast('Plan progress reset'); }
                   }}
                 >
                   <RotateCcw size={14} /> Reset

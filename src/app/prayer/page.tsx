@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookHeart, Plus, Search, Filter, Check, CheckCircle2,
-  Calendar, X, Clock, MessageCircle
+  Calendar, X, Clock, MessageCircle, Pencil
 } from 'lucide-react';
 import { AppLayout } from '@/components/navigation/AppLayout';
 import { Card } from '@/components/ui/Card';
@@ -16,6 +16,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { StreakBadge } from '@/components/ui/StreakBadge';
 import { useApp } from '@/contexts/AppContext';
+import { useToast } from '@/components/ui/Toast';
 import { PrayerCategory } from '@/lib/types';
 import { formatShortDate, getStreakCount } from '@/lib/utils';
 
@@ -33,8 +34,10 @@ const categoryColors: Record<string, string> = {
 
 export default function PrayerPage() {
   const { prayers, addPrayer, updatePrayer, deletePrayer, prayerDates } = useApp();
+  const { showToast } = useToast();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAnswerModal, setShowAnswerModal] = useState<string | null>(null);
+  const [editingPrayer, setEditingPrayer] = useState<string | null>(null);
   const [view, setView] = useState<'active' | 'answered'>('active');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
@@ -42,6 +45,11 @@ export default function PrayerPage() {
   const [newDescription, setNewDescription] = useState('');
   const [newCategory, setNewCategory] = useState<PrayerCategory>('Petition');
   const [testimonyNotes, setTestimonyNotes] = useState('');
+
+  // Edit state
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editCategory, setEditCategory] = useState<PrayerCategory>('Petition');
 
   const streak = getStreakCount(prayerDates);
 
@@ -70,6 +78,7 @@ export default function PrayerPage() {
     setNewDescription('');
     setNewCategory('Petition');
     setShowAddModal(false);
+    showToast('Prayer added');
   };
 
   const handleMarkAnswered = (id: string) => {
@@ -80,6 +89,25 @@ export default function PrayerPage() {
     });
     setTestimonyNotes('');
     setShowAnswerModal(null);
+    showToast('Praise God! Prayer marked as answered');
+  };
+
+  const openEditModal = (prayer: typeof prayers[0]) => {
+    setEditingPrayer(prayer.id);
+    setEditTitle(prayer.title);
+    setEditDescription(prayer.description);
+    setEditCategory(prayer.category);
+  };
+
+  const handleEditPrayer = () => {
+    if (!editingPrayer || !editTitle.trim()) return;
+    updatePrayer(editingPrayer, {
+      title: editTitle.trim(),
+      description: editDescription.trim(),
+      category: editCategory,
+    });
+    setEditingPrayer(null);
+    showToast('Prayer updated');
   };
 
   return (
@@ -219,7 +247,14 @@ export default function PrayerPage() {
                   <span className="text-xs text-[var(--text-muted)] flex items-center gap-1">
                     <Clock size={12} /> {formatShortDate(prayer.date)}
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => openEditModal(prayer)}
+                      className="p-1.5 rounded-lg hover:bg-[var(--bg-secondary)] text-[var(--text-muted)]"
+                      aria-label="Edit prayer"
+                    >
+                      <Pencil size={14} />
+                    </button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -232,7 +267,7 @@ export default function PrayerPage() {
                       Answered
                     </Button>
                     <button
-                      onClick={() => deletePrayer(prayer.id)}
+                      onClick={() => { deletePrayer(prayer.id); showToast('Prayer removed'); }}
                       className="p-1.5 rounded-lg hover:bg-[var(--bg-secondary)] text-[var(--text-muted)]"
                       aria-label="Delete prayer"
                     >
@@ -270,6 +305,34 @@ export default function PrayerPage() {
           />
           <Button onClick={handleAddPrayer} className="w-full">
             Add Prayer
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Edit Prayer Modal */}
+      <Modal isOpen={!!editingPrayer} onClose={() => setEditingPrayer(null)} title="Edit Prayer">
+        <div className="space-y-4">
+          <Input
+            label="Title"
+            placeholder="Prayer title"
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+          />
+          <TextArea
+            label="Description"
+            placeholder="Prayer details..."
+            rows={4}
+            value={editDescription}
+            onChange={(e) => setEditDescription(e.target.value)}
+          />
+          <Select
+            label="Category"
+            options={categories.map(c => ({ value: c, label: c }))}
+            value={editCategory}
+            onChange={(e) => setEditCategory(e.target.value as PrayerCategory)}
+          />
+          <Button onClick={handleEditPrayer} className="w-full">
+            Save Changes
           </Button>
         </div>
       </Modal>

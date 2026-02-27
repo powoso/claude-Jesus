@@ -11,10 +11,12 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useApp } from '@/contexts/AppContext';
+import { useToast } from '@/components/ui/Toast';
 import Link from 'next/link';
 
 export default function SettingsPage() {
   const { settings, updateSettings, exportData, importData } = useApp();
+  const { showToast } = useToast();
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -29,6 +31,7 @@ export default function SettingsPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    showToast('Data exported successfully');
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,6 +42,7 @@ export default function SettingsPage() {
       const text = event.target?.result as string;
       const success = importData(text);
       setImportStatus(success ? 'success' : 'error');
+      showToast(success ? 'Data imported successfully' : 'Failed to import data', success ? 'success' : 'error');
       setTimeout(() => setImportStatus('idle'), 3000);
     };
     reader.readAsText(file);

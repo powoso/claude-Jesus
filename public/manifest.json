@@ -1,0 +1,19 @@
+{
+  "name": "Daily Walk",
+  "short_name": "Daily Walk",
+  "description": "Your personal space to grow closer to Jesus, one day at a time.",
+  "start_url": "/devotional",
+  "display": "standalone",
+  "background_color": "#FFFDF7",
+  "theme_color": "#7C9070",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "education"]
+}

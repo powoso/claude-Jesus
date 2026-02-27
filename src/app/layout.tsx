@@ -1,12 +1,25 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { AppProvider } from '@/contexts/AppContext';
+import { ToastProvider } from '@/components/ui/Toast';
+import { ServiceWorkerRegistrar } from '@/components/ui/ServiceWorkerRegistrar';
 import './globals.css';
+
+export const viewport: Viewport = {
+  themeColor: '#7C9070',
+};
 
 export const metadata: Metadata = {
   title: 'Daily Walk — A Jesus-Centered Devotional App',
   description: 'Your personal space to grow closer to Jesus, one day at a time. Daily devotionals, prayer journal, Bible reading plans, scripture memory, and more.',
   icons: {
     icon: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Daily Walk',
   },
 };
 
@@ -27,7 +40,10 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <AppProvider>
-          {children}
+          <ToastProvider>
+            <ServiceWorkerRegistrar />
+            {children}
+          </ToastProvider>
         </AppProvider>
       </body>
     </html>
