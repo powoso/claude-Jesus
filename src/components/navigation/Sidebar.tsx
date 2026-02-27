@@ -16,8 +16,10 @@ import {
   Menu,
   X,
   Cross,
+  CloudCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useApp } from '@/contexts/AppContext';
 
 const navItems = [
   { href: '/devotional', label: 'Devotional', icon: Home },
@@ -36,6 +38,7 @@ const bottomItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const { lastSaved } = useApp();
 
   return (
     <>
@@ -73,6 +76,13 @@ export function Sidebar() {
         </nav>
 
         <div className="p-4 border-t border-[var(--border-color)] space-y-1">
+          {/* Saved indicator */}
+          {lastSaved && (
+            <div className="flex items-center gap-2 px-4 py-2 text-xs text-[var(--text-muted)]">
+              <CloudCheck size={14} className="text-emerald-500" />
+              <span>Saved locally</span>
+            </div>
+          )}
           {bottomItems.map(item => {
             const isActive = pathname === item.href;
             return (
