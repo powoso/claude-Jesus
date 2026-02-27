@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-cream: #FFFDF7;
+  --color-sage: #7C9070;
+  --color-sage-light: #9AB08F;
+  --color-sage-dark: #5C7050;
+  --color-gold: #C9A84C;
+  --color-gold-light: #D4B96A;
+  --color-gold-dark: #A88A30;
+  --color-soft-white: #FAFAFA;
+  --color-muted-brown: #6B5B4B;
+  --color-muted-brown-light: #8B7B6B;
+
+  --color-navy: #1A1F2E;
+  --color-navy-light: #242A3D;
+  --color-soft-gold: #D4AF37;
+  --color-slate: #2D3348;
+  --color-slate-light: #3D4460;
+  --color-warm-gray: #9CA3AF;
+
+  --font-serif: 'Lora', Georgia, serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Light mode defaults */
+:root {
+  --bg-primary: #FFFDF7;
+  --bg-secondary: #FAFAFA;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F9F7F2;
+  --text-primary: #3D3328;
+  --text-secondary: #6B5B4B;
+  --text-muted: #8B7B6B;
+  --border-color: #E8E0D4;
+  --accent: #7C9070;
+  --accent-light: #9AB08F;
+  --accent-gold: #C9A84C;
+  --shadow-color: rgba(107, 91, 75, 0.08);
+}
+
+/* Dark mode */
+.dark {
+  --bg-primary: #1A1F2E;
+  --bg-secondary: #242A3D;
+  --bg-card: #2D3348;
+  --bg-card-hover: #3D4460;
+  --text-primary: #F0EDE8;
+  --text-secondary: #C8C3BB;
+  --text-muted: #9CA3AF;
+  --border-color: #3D4460;
+  --accent: #D4AF37;
+  --accent-light: #E0C45A;
+  --accent-gold: #D4AF37;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Serif text for scripture */
+.font-scripture {
+  font-family: var(--font-serif);
+  font-style: italic;
+  line-height: 1.8;
+  letter-spacing: 0.02em;
+}
+
+.font-heading {
+  font-family: var(--font-serif);
+  letter-spacing: -0.01em;
+}
+
+/* Card base styles */
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px var(--shadow-color);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+/* Custom scrollbar for webkit */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+/* Pastel card backgrounds for gratitude wall */
+.pastel-rose { background-color: #FFF1F2; }
+.pastel-sky { background-color: #F0F9FF; }
+.pastel-emerald { background-color: #ECFDF5; }
+.pastel-amber { background-color: #FFFBEB; }
+.pastel-violet { background-color: #F5F3FF; }
+.pastel-pink { background-color: #FDF2F8; }
+
+.dark .pastel-rose { background-color: #2D2333; }
+.dark .pastel-sky { background-color: #1A2538; }
+.dark .pastel-emerald { background-color: #1A2D28; }
+.dark .pastel-amber { background-color: #2D2818; }
+.dark .pastel-violet { background-color: #25203D; }
+.dark .pastel-pink { background-color: #2D1F30; }
+
+/* Custom animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Progress bar animation */
+.progress-fill {
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Font size adjustments */
+.text-sm body, .text-sm .text-base-size { font-size: 14px; }
+.text-lg body, .text-lg .text-base-size { font-size: 18px; }
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Smooth page transitions */
+main {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+/* Bottom nav safe area for mobile */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
