@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daily-walk-v1';
+const CACHE_NAME = 'daily-walk-v2';
 const OFFLINE_URL = '/devotional';
 
 // Pre-cache core app shell
@@ -71,3 +71,61 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+
+// Handle notification click — open the app
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ('focus' in client) {
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow('/devotional');
+    })
+  );
+});
+
+// Handle scheduled notification messages from the main thread
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SCHEDULE_REMINDER') {
+    self.reminderTime = event.data.time;
+    self.reminderEnabled = true;
+    scheduleNextReminder();
+  }
+  if (event.data && event.data.type === 'CANCEL_REMINDER') {
+    self.reminderEnabled = false;
+    if (self.reminderTimeout) {
+      clearTimeout(self.reminderTimeout);
+      self.reminderTimeout = null;
+    }
+  }
+});
+
+function scheduleNextReminder() {
+  if (!self.reminderEnabled || !self.reminderTime) return;
+  if (self.reminderTimeout) clearTimeout(self.reminderTimeout);
+
+  const [hours, minutes] = self.reminderTime.split(':').map(Number);
+  const now = new Date();
+  const target = new Date(now);
+  target.setHours(hours, minutes, 0, 0);
+
+  if (target <= now) {
+    target.setDate(target.getDate() + 1);
+  }
+
+  const delay = target.getTime() - now.getTime();
+
+  self.reminderTimeout = setTimeout(() => {
+    self.registration.showNotification('Daily Walk', {
+      body: 'Time for your daily walk with Jesus. Your verse is waiting.',
+      icon: '/icon-192.png',
+      badge: '/icon-96.png',
+      tag: 'daily-reminder',
+      renotify: true,
+    });
+    scheduleNextReminder();
+  }, delay);
+}

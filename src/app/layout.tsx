@@ -3,6 +3,7 @@ import { AppProvider } from '@/contexts/AppContext';
 import { SyncProvider } from '@/contexts/SyncContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import { ServiceWorkerRegistrar } from '@/components/ui/ServiceWorkerRegistrar';
+import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 
 import './globals.css';
 
@@ -45,6 +46,7 @@ export default function RootLayout({
           <AppProvider>
             <ToastProvider>
               <ServiceWorkerRegistrar />
+              <OfflineIndicator />
 
               {children}
             </ToastProvider>

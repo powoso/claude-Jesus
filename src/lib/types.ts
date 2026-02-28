@@ -105,4 +105,6 @@ export interface AppSettings {
   darkMode: boolean;
   fontSize: 'small' | 'medium' | 'large';
   hasVisitedBefore: boolean;
+  reminderEnabled: boolean;
+  reminderTime: string; // HH:mm format, e.g. "08:00"
 }

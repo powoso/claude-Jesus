@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import {
   Settings, Sun, Moon, Type, Download, Upload, Trash2,
   Check, AlertCircle, Info, Cloud, CloudOff, LogIn, LogOut,
-  RefreshCw, Mail, Lock, UserPlus, Loader2,
+  RefreshCw, Mail, Lock, UserPlus, Loader2, Bell, BellOff, Clock,
 } from 'lucide-react';
 import { AppLayout } from '@/components/navigation/AppLayout';
 import { Card } from '@/components/ui/Card';
@@ -202,6 +202,81 @@ export default function SettingsPage() {
                 </button>
               ))}
             </div>
+          </div>
+        </Card>
+
+        {/* Daily Reminder */}
+        <Card>
+          <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)] mb-4">Daily Reminder</h2>
+
+          {/* Enable/Disable */}
+          <div className="flex items-center justify-between py-3 border-b border-[var(--border-color)]">
+            <div className="flex items-center gap-3">
+              {settings.reminderEnabled ? <Bell size={18} className="text-[var(--accent)]" /> : <BellOff size={18} className="text-[var(--text-muted)]" />}
+              <div>
+                <p className="text-sm font-medium text-[var(--text-primary)]">Notification</p>
+                <p className="text-xs text-[var(--text-muted)]">Get a daily reminder to walk with Jesus</p>
+              </div>
+            </div>
+            <button
+              onClick={async () => {
+                if (!settings.reminderEnabled) {
+                  if ('Notification' in window && Notification.permission !== 'granted') {
+                    const perm = await Notification.requestPermission();
+                    if (perm !== 'granted') {
+                      showToast('Please allow notifications in your browser settings', 'error');
+                      return;
+                    }
+                  }
+                  updateSettings({ reminderEnabled: true });
+                  // Tell service worker to schedule
+                  const reg = await navigator.serviceWorker?.ready;
+                  reg?.active?.postMessage({ type: 'SCHEDULE_REMINDER', time: settings.reminderTime });
+                  showToast('Daily reminder enabled');
+                } else {
+                  updateSettings({ reminderEnabled: false });
+                  const reg = await navigator.serviceWorker?.ready;
+                  reg?.active?.postMessage({ type: 'CANCEL_REMINDER' });
+                  showToast('Daily reminder disabled');
+                }
+              }}
+              className={`relative w-12 h-6 rounded-full transition-colors ${
+                settings.reminderEnabled ? 'bg-[var(--accent)]' : 'bg-[var(--border-color)]'
+              }`}
+              role="switch"
+              aria-checked={settings.reminderEnabled}
+              aria-label="Toggle daily reminder"
+            >
+              <motion.div
+                className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow"
+                animate={{ left: settings.reminderEnabled ? '26px' : '2px' }}
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              />
+            </button>
+          </div>
+
+          {/* Reminder Time */}
+          <div className="flex items-center justify-between py-3">
+            <div className="flex items-center gap-3">
+              <Clock size={18} className="text-[var(--accent)]" />
+              <div>
+                <p className="text-sm font-medium text-[var(--text-primary)]">Reminder Time</p>
+                <p className="text-xs text-[var(--text-muted)]">When to receive your daily nudge</p>
+              </div>
+            </div>
+            <input
+              type="time"
+              value={settings.reminderTime || '08:00'}
+              onChange={async (e) => {
+                updateSettings({ reminderTime: e.target.value });
+                if (settings.reminderEnabled) {
+                  const reg = await navigator.serviceWorker?.ready;
+                  reg?.active?.postMessage({ type: 'SCHEDULE_REMINDER', time: e.target.value });
+                }
+              }}
+              className="px-3 py-1.5 rounded-lg text-sm bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              aria-label="Reminder time"
+            />
           </div>
         </Card>
 

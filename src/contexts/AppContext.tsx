@@ -46,6 +46,8 @@ interface AppState {
 
   prayerDates: string[];
   memoryPracticeDates: string[];
+  visitDates: string[];
+  recordVisit: () => void;
 
   exportData: () => string;
   importData: (json: string) => boolean;
@@ -67,6 +69,7 @@ const KEYS = {
   prayerDates: 'dw-prayer-dates',
   memoryPracticeDates: 'dw-memory-practice-dates',
   journal: 'dw-journal',
+  visitDates: 'dw-visit-dates',
 } as const;
 
 function loadFromStorage<T>(key: string, fallback: T): T {
@@ -93,6 +96,8 @@ const defaultSettings: AppSettings = {
   darkMode: false,
   fontSize: 'medium',
   hasVisitedBefore: false,
+  reminderEnabled: false,
+  reminderTime: '08:00',
 };
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
@@ -107,15 +112,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [prayerDates, setPrayerDates] = useState<string[]>([]);
   const [memoryPracticeDates, setMemoryPracticeDates] = useState<string[]>([]);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+  const [visitDates, setVisitDates] = useState<string[]>([]);
 
   // Ref always holds the latest state for the beforeunload flush
   const stateRef = useRef({
     settings, prayers, readingProgress, memoryVerses,
-    gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries,
+    gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries, visitDates,
   });
   stateRef.current = {
     settings, prayers, readingProgress, memoryVerses,
-    gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries,
+    gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries, visitDates,
   };
 
   const markSaved = useCallback(() => setLastSaved(new Date()), []);
@@ -141,6 +147,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         prayerDates: s.prayerDates,
         memoryPracticeDates: s.memoryPracticeDates,
         journalEntries: s.journalEntries,
+        visitDates: s.visitDates,
       });
     }, 2000);
   }, [user, pushToCloud]);
@@ -178,6 +185,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (data.prayerDates) { setPrayerDates(data.prayerDates as string[]); saveToStorage(KEYS.prayerDates, data.prayerDates); }
     if (data.memoryPracticeDates) { setMemoryPracticeDates(data.memoryPracticeDates as string[]); saveToStorage(KEYS.memoryPracticeDates, data.memoryPracticeDates); }
     if (data.journalEntries) { setJournalEntries(data.journalEntries as JournalEntry[]); saveToStorage(KEYS.journal, data.journalEntries); }
+    if (data.visitDates) { setVisitDates(data.visitDates as string[]); saveToStorage(KEYS.visitDates, data.visitDates); }
     markSaved();
   }, [markSaved]);
 
@@ -192,6 +200,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setPrayerDates(loadFromStorage(KEYS.prayerDates, []));
     setMemoryPracticeDates(loadFromStorage(KEYS.memoryPracticeDates, []));
     setJournalEntries(loadFromStorage(KEYS.journal, []));
+    setVisitDates(loadFromStorage(KEYS.visitDates, []));
     setIsHydrated(true);
   }, []);
 
@@ -208,6 +217,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       saveToStorage(KEYS.prayerDates, s.prayerDates);
       saveToStorage(KEYS.memoryPracticeDates, s.memoryPracticeDates);
       saveToStorage(KEYS.journal, s.journalEntries);
+      saveToStorage(KEYS.visitDates, s.visitDates);
     };
 
     const onVisChange = () => {
@@ -238,6 +248,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           case KEYS.prayerDates: setPrayerDates(val); break;
           case KEYS.memoryPracticeDates: setMemoryPracticeDates(val); break;
           case KEYS.journal: setJournalEntries(val); break;
+          case KEYS.visitDates: setVisitDates(val); break;
         }
       } catch { /* ignore parse errors from other apps */ }
     };
@@ -284,6 +295,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     skipNextCloudUpdate.current = true;
     schedulePush();
   }, [schedulePush]);
+
+  const recordVisit = useCallback(() => {
+    const today = new Date().toISOString().split('T')[0];
+    setVisitDates(prev => {
+      if (prev.includes(today)) return prev;
+      const next = [...prev, today];
+      saveToStorage(KEYS.visitDates, next);
+      return next;
+    });
+  }, []);
 
   const addPrayer = useCallback((prayer: Omit<Prayer, 'id' | 'createdAt' | 'isAnswered'>) => {
     const newPrayer: Prayer = {
@@ -502,9 +523,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       prayerDates,
       memoryPracticeDates,
       journalEntries,
+      visitDates,
       exportDate: new Date().toISOString(),
     }, null, 2);
-  }, [settings, prayers, readingProgress, memoryVerses, gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries]);
+  }, [settings, prayers, readingProgress, memoryVerses, gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries, visitDates]);
 
   const importData = useCallback((json: string): boolean => {
     try {
@@ -519,6 +541,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (data.prayerDates) { setPrayerDates(data.prayerDates); saveToStorage(KEYS.prayerDates, data.prayerDates); }
       if (data.memoryPracticeDates) { setMemoryPracticeDates(data.memoryPracticeDates); saveToStorage(KEYS.memoryPracticeDates, data.memoryPracticeDates); }
       if (data.journalEntries) { setJournalEntries(data.journalEntries); saveToStorage(KEYS.journal, data.journalEntries); }
+      if (data.visitDates) { setVisitDates(data.visitDates); saveToStorage(KEYS.visitDates, data.visitDates); }
       markSaved();
       return true;
     } catch {
@@ -553,6 +576,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       addWeeklyCheckIn,
       prayerDates,
       memoryPracticeDates,
+      visitDates,
+      recordVisit,
       exportData,
       importData,
       isHydrated,
