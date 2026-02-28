@@ -8,9 +8,14 @@
     "start": "next start",
     "lint": "eslint",
     "cap:sync": "next build && npx cap sync",
-    "cap:ios": "npx cap open ios"
+    "cap:ios": "npx cap open ios",
+    "cap:android": "npx cap open android",
+    "cap:add-android": "npx cap add android",
+    "cap:sync-android": "next build && npx cap sync android",
+    "generate-icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
+    "@capacitor/android": "^8.1.0",
     "@capacitor/core": "^8.1.0",
     "@capacitor/ios": "^8.1.0",
     "@next/font": "^14.2.15",
@@ -31,6 +36,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "playwright": "^1.52.0",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

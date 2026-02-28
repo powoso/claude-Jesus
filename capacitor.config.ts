@@ -12,6 +12,10 @@ const config: CapacitorConfig = {
     preferredContentMode: 'mobile',
     scheme: 'Daily Walk',
   },
+  android: {
+    allowMixedContent: false,
+    backgroundColor: '#FFFDF7',
+  },
 };
 
 export default config;

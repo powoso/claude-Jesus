@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Daily Walk</string>
+    <string name="title_activity_main">Daily Walk</string>
+    <string name="package_name">com.powoso.dailywalk</string>
+    <string name="custom_url_scheme">com.powoso.dailywalk</string>
+</resources>
