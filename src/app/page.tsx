@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-  Cross,
   BookHeart,
   BookOpen,
   Brain,
@@ -13,6 +12,7 @@ import {
   Home,
   ArrowRight,
 } from 'lucide-react';
+import Image from 'next/image';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/Button';
 
@@ -61,8 +61,8 @@ export default function LandingPage() {
   if (!mounted || !isHydrated || settings.hasVisitedBefore) {
     return (
       <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
-        <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center animate-pulse">
-          <Cross size={16} className="text-white" />
+        <div className="w-10 h-10 rounded-xl animate-pulse">
+          <Image src="/favicon.svg" alt="Daily Walk" width={40} height={40} className="rounded-xl" />
         </div>
       </div>
     );
@@ -84,8 +84,8 @@ export default function LandingPage() {
           transition={{ duration: 0.6 }}
           className="mb-8"
         >
-          <div className="w-20 h-20 mx-auto rounded-2xl bg-[var(--accent)] flex items-center justify-center mb-6 shadow-lg">
-            <Cross size={36} className="text-white" />
+          <div className="w-20 h-20 mx-auto rounded-2xl mb-6 shadow-lg overflow-hidden">
+            <Image src="/favicon.svg" alt="Daily Walk" width={80} height={80} className="w-full h-full" />
           </div>
           <h1 className="font-heading text-5xl sm:text-6xl md:text-7xl font-bold text-[var(--text-primary)] mb-4 tracking-tight">
             Daily Walk
@@ -188,8 +188,8 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="relative py-16 px-6 border-t border-[var(--border-color)]">
         <div className="max-w-2xl mx-auto text-center">
-          <div className="w-10 h-10 mx-auto rounded-xl bg-[var(--accent)] flex items-center justify-center mb-4">
-            <Cross size={18} className="text-white" />
+          <div className="w-10 h-10 mx-auto rounded-xl mb-4 overflow-hidden">
+            <Image src="/favicon.svg" alt="Daily Walk" width={40} height={40} className="w-full h-full" />
           </div>
           <p className="text-sm text-[var(--text-muted)] mb-6">
             Built with love for the glory of God
