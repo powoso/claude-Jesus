@@ -1,7 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Cross, Heart, BookOpen, ArrowLeft } from 'lucide-react';
+import { Heart, BookOpen, ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
 import { AppLayout } from '@/components/navigation/AppLayout';
 import { Card } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -13,8 +14,8 @@ export default function AboutPage() {
       <PageHeader
         title="About Daily Walk"
         icon={
-          <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-            <Cross size={16} className="text-white" />
+          <div className="w-8 h-8 rounded-lg overflow-hidden">
+            <Image src="/favicon.svg" alt="Daily Walk" width={32} height={32} className="w-full h-full" />
           </div>
         }
       />
@@ -22,8 +23,8 @@ export default function AboutPage() {
       <div className="max-w-2xl space-y-6">
         <Card>
           <div className="text-center py-4">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-[var(--accent)] flex items-center justify-center mb-4">
-              <Cross size={28} className="text-white" />
+            <div className="w-16 h-16 mx-auto rounded-2xl mb-4 overflow-hidden shadow-lg">
+              <Image src="/favicon.svg" alt="Daily Walk" width={64} height={64} className="w-full h-full" />
             </div>
             <h2 className="font-heading text-2xl font-bold text-[var(--text-primary)] mb-2">Daily Walk</h2>
             <p className="text-sm text-[var(--text-muted)]">Version 1.0.0</p>
