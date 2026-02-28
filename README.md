@@ -6,6 +6,11 @@ Daily Walk is a Jesus-centered devotional and spiritual growth web application d
 
 > *"I am the light of the world. Whoever follows me will never walk in darkness, but will have the light of life."* — John 8:12
 
+## Live Sites
+
+- **[daily-walk.com](https://daily-walk.com)**
+- **[daily-walk.app](https://daily-walk.app)**
+
 ---
 
 ## Features Overview
