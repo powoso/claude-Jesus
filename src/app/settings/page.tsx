@@ -4,21 +4,42 @@ import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Settings, Sun, Moon, Type, Download, Upload, Trash2,
-  Check, AlertCircle, Info
+  Check, AlertCircle, Info, Cloud, CloudOff, LogIn, LogOut,
+  RefreshCw, Mail, Lock, UserPlus, Loader2,
 } from 'lucide-react';
 import { AppLayout } from '@/components/navigation/AppLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useApp } from '@/contexts/AppContext';
+import { useSync } from '@/contexts/SyncContext';
 import { useToast } from '@/components/ui/Toast';
 import Link from 'next/link';
 
+function friendlyError(msg: string): string {
+  if (msg.includes('auth/invalid-email')) return 'Invalid email address.';
+  if (msg.includes('auth/user-not-found') || msg.includes('auth/invalid-credential')) return 'Email or password is incorrect.';
+  if (msg.includes('auth/wrong-password') || msg.includes('auth/invalid-credential')) return 'Email or password is incorrect.';
+  if (msg.includes('auth/email-already-in-use')) return 'An account with this email already exists.';
+  if (msg.includes('auth/weak-password')) return 'Password must be at least 6 characters.';
+  if (msg.includes('auth/too-many-requests')) return 'Too many attempts. Please wait a moment.';
+  return msg;
+}
+
 export default function SettingsPage() {
   const { settings, updateSettings, exportData, importData } = useApp();
+  const sync = useSync();
   const { showToast } = useToast();
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Auth form state
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [resetSent, setResetSent] = useState(false);
 
   const handleExport = () => {
     const data = exportData();
@@ -54,6 +75,67 @@ export default function SettingsPage() {
       localStorage.clear();
       window.location.reload();
     }
+  };
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    setAuthLoading(true);
+    try {
+      if (authMode === 'signin') {
+        await sync.signIn(email, password);
+        showToast('Signed in — syncing your data');
+      } else {
+        await sync.signUp(email, password);
+        showToast('Account created — syncing your data');
+      }
+      setEmail('');
+      setPassword('');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Authentication failed';
+      setAuthError(friendlyError(msg));
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await sync.signOut();
+    showToast('Signed out');
+  };
+
+  const handleResetPassword = async () => {
+    if (!email) { setAuthError('Enter your email first.'); return; }
+    try {
+      await sync.resetPassword(email);
+      setResetSent(true);
+      showToast('Password reset email sent');
+    } catch {
+      setAuthError('Could not send reset email. Check the address.');
+    }
+  };
+
+  const handleManualSync = async () => {
+    const data = JSON.parse(exportData());
+    delete data.exportDate;
+    await sync.pushToCloud(data);
+    showToast('Data synced to cloud');
+  };
+
+  const syncStatusLabel = {
+    idle: 'Not connected',
+    syncing: 'Syncing...',
+    synced: 'Synced',
+    error: 'Sync error',
+    offline: 'Offline',
+  };
+
+  const syncStatusColor = {
+    idle: 'text-[var(--text-muted)]',
+    syncing: 'text-amber-500',
+    synced: 'text-emerald-500',
+    error: 'text-red-500',
+    offline: 'text-[var(--text-muted)]',
   };
 
   return (
@@ -122,6 +204,142 @@ export default function SettingsPage() {
             </div>
           </div>
         </Card>
+
+        {/* Cloud Sync */}
+        {sync.available && (
+          <Card>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">Cloud Sync</h2>
+              {sync.user && (
+                <div className="flex items-center gap-1.5">
+                  {sync.syncStatus === 'syncing' ? (
+                    <Loader2 size={14} className="text-amber-500 animate-spin" />
+                  ) : sync.syncStatus === 'synced' ? (
+                    <Cloud size={14} className="text-emerald-500" />
+                  ) : sync.syncStatus === 'error' ? (
+                    <CloudOff size={14} className="text-red-500" />
+                  ) : (
+                    <Cloud size={14} className="text-[var(--text-muted)]" />
+                  )}
+                  <span className={`text-xs font-medium ${syncStatusColor[sync.syncStatus]}`}>
+                    {syncStatusLabel[sync.syncStatus]}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {sync.user ? (
+              /* Signed in */
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 py-2">
+                  <div className="w-8 h-8 rounded-full bg-[var(--accent)]/10 flex items-center justify-center">
+                    <Mail size={14} className="text-[var(--accent)]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[var(--text-primary)] truncate">{sync.user.email}</p>
+                    <p className="text-xs text-[var(--text-muted)]">Signed in — data syncs automatically</p>
+                  </div>
+                </div>
+
+                {sync.lastError && (
+                  <div className="bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2 flex items-center gap-2">
+                    <AlertCircle size={14} className="text-red-500 flex-shrink-0" />
+                    <p className="text-xs text-red-600 dark:text-red-400">{sync.lastError}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Button variant="secondary" size="sm" onClick={handleManualSync}>
+                    <RefreshCw size={14} />
+                    Sync Now
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                    <LogOut size={14} />
+                    Sign Out
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              /* Sign in / Sign up form */
+              <div>
+                <p className="text-sm text-[var(--text-secondary)] mb-4">
+                  Sign in to sync your data across all your devices. Your entries, prayers, and progress stay safe in the cloud.
+                </p>
+
+                <form onSubmit={handleAuth} className="space-y-3">
+                  <div className="relative">
+                    <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      value={email}
+                      onChange={(e) => { setEmail(e.target.value); setAuthError(null); setResetSent(false); }}
+                      className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] text-sm"
+                      required
+                      autoComplete="email"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                    <input
+                      type="password"
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => { setPassword(e.target.value); setAuthError(null); }}
+                      className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] text-sm"
+                      required
+                      minLength={6}
+                      autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'}
+                    />
+                  </div>
+
+                  {authError && (
+                    <div className="flex items-center gap-2 text-xs text-red-500">
+                      <AlertCircle size={12} />
+                      {authError}
+                    </div>
+                  )}
+
+                  {resetSent && (
+                    <div className="flex items-center gap-2 text-xs text-emerald-500">
+                      <Check size={12} />
+                      Reset email sent — check your inbox.
+                    </div>
+                  )}
+
+                  <Button type="submit" className="w-full" disabled={authLoading}>
+                    {authLoading ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : authMode === 'signin' ? (
+                      <><LogIn size={16} /> Sign In</>
+                    ) : (
+                      <><UserPlus size={16} /> Create Account</>
+                    )}
+                  </Button>
+
+                  <div className="flex items-center justify-between text-xs">
+                    <button
+                      type="button"
+                      onClick={() => { setAuthMode(authMode === 'signin' ? 'signup' : 'signin'); setAuthError(null); }}
+                      className="text-[var(--accent)] hover:underline"
+                    >
+                      {authMode === 'signin' ? 'Create an account' : 'Already have an account?'}
+                    </button>
+                    {authMode === 'signin' && (
+                      <button
+                        type="button"
+                        onClick={handleResetPassword}
+                        className="text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+                      >
+                        Forgot password?
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </div>
+            )}
+          </Card>
+        )}
 
         {/* Data Management */}
         <Card>

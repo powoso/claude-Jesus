@@ -11,6 +11,7 @@ import {
   JournalEntry,
 } from '@/lib/types';
 import { generateId, getDateKey } from '@/lib/utils';
+import { useSync } from '@/contexts/SyncContext';
 
 interface AppState {
   settings: AppSettings;
@@ -119,6 +120,67 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const markSaved = useCallback(() => setLastSaved(new Date()), []);
 
+  // ── Cloud sync integration ──
+  const { user, pushToCloud, pullFromCloud, startRealtimeSync, stopRealtimeSync } = useSync();
+  const cloudPushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const skipNextCloudUpdate = useRef(false);
+
+  // Debounced push to cloud (2s after last local change)
+  const schedulePush = useCallback(() => {
+    if (!user) return;
+    if (cloudPushTimer.current) clearTimeout(cloudPushTimer.current);
+    cloudPushTimer.current = setTimeout(() => {
+      const s = stateRef.current;
+      pushToCloud({
+        settings: s.settings,
+        prayers: s.prayers,
+        readingProgress: s.readingProgress,
+        memoryVerses: s.memoryVerses,
+        gratitudeEntries: s.gratitudeEntries,
+        weeklyCheckIns: s.weeklyCheckIns,
+        prayerDates: s.prayerDates,
+        memoryPracticeDates: s.memoryPracticeDates,
+        journalEntries: s.journalEntries,
+      });
+    }, 2000);
+  }, [user, pushToCloud]);
+
+  // When user signs in: pull cloud data and merge, then start real-time listener
+  useEffect(() => {
+    if (!user) { stopRealtimeSync(); return; }
+
+    let cancelled = false;
+    (async () => {
+      const cloud = await pullFromCloud();
+      if (cancelled || !cloud) return;
+      applyCloudData(cloud);
+
+      // Start real-time sync for ongoing changes from other devices
+      startRealtimeSync((data) => {
+        // Skip if we just pushed (avoid echo loop)
+        if (skipNextCloudUpdate.current) { skipNextCloudUpdate.current = false; return; }
+        applyCloudData(data);
+      });
+    })();
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid]);
+
+  /** Apply cloud data to local state + localStorage */
+  const applyCloudData = useCallback((data: Record<string, unknown>) => {
+    if (data.settings) { setSettings(data.settings as AppSettings); saveToStorage(KEYS.settings, data.settings); }
+    if (data.prayers) { setPrayers(data.prayers as Prayer[]); saveToStorage(KEYS.prayers, data.prayers); }
+    if (data.readingProgress) { setReadingProgress(data.readingProgress as UserReadingProgress[]); saveToStorage(KEYS.readingProgress, data.readingProgress); }
+    if (data.memoryVerses) { setMemoryVerses(data.memoryVerses as MemoryVerse[]); saveToStorage(KEYS.memoryVerses, data.memoryVerses); }
+    if (data.gratitudeEntries) { setGratitudeEntries(data.gratitudeEntries as GratitudeEntry[]); saveToStorage(KEYS.gratitude, data.gratitudeEntries); }
+    if (data.weeklyCheckIns) { setWeeklyCheckIns(data.weeklyCheckIns as WeeklyCheckIn[]); saveToStorage(KEYS.weeklyCheckIns, data.weeklyCheckIns); }
+    if (data.prayerDates) { setPrayerDates(data.prayerDates as string[]); saveToStorage(KEYS.prayerDates, data.prayerDates); }
+    if (data.memoryPracticeDates) { setMemoryPracticeDates(data.memoryPracticeDates as string[]); saveToStorage(KEYS.memoryPracticeDates, data.memoryPracticeDates); }
+    if (data.journalEntries) { setJournalEntries(data.journalEntries as JournalEntry[]); saveToStorage(KEYS.journal, data.journalEntries); }
+    markSaved();
+  }, [markSaved]);
+
   // ── Hydrate from localStorage on first mount ──
   useEffect(() => {
     setSettings(loadFromStorage(KEYS.settings, defaultSettings));
@@ -212,9 +274,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const next = { ...prev, ...updates };
       saveToStorage(KEYS.settings, next);
       markSaved();
+      skipNextCloudUpdate.current = true;
+      schedulePush();
       return next;
     });
-  }, [markSaved]);
+  }, [markSaved, schedulePush]);
+
+  const syncAfterSave = useCallback(() => {
+    skipNextCloudUpdate.current = true;
+    schedulePush();
+  }, [schedulePush]);
 
   const addPrayer = useCallback((prayer: Omit<Prayer, 'id' | 'createdAt' | 'isAnswered'>) => {
     const newPrayer: Prayer = {
@@ -234,7 +303,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       saveToStorage(KEYS.prayerDates, next);
       return next;
     });
-  }, [markSaved]);
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
 
   const updatePrayer = useCallback((id: string, updates: Partial<Prayer>) => {
     setPrayers(prev => {
@@ -243,7 +313,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       markSaved();
       return next;
     });
-  }, [markSaved]);
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
 
   const deletePrayer = useCallback((id: string) => {
     setPrayers(prev => {
@@ -252,7 +323,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       markSaved();
       return next;
     });
-  }, [markSaved]);
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
 
   const startPlan = useCallback((planId: string) => {
     setReadingProgress(prev => {
@@ -267,7 +339,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       markSaved();
       return next;
     });
-  }, [markSaved]);
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
 
   const toggleReadingDay = useCallback((planId: string, day: number) => {
     setReadingProgress(prev => {
@@ -282,7 +355,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       markSaved();
       return next;
     });
-  }, [markSaved]);
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
 
   const resetPlan = useCallback((planId: string) => {
     setReadingProgress(prev => {
@@ -291,7 +365,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       markSaved();
       return next;
     });
-  }, [markSaved]);
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
 
   const addMemoryVerse = useCallback((reference: string, text: string) => {
     const newVerse: MemoryVerse = {
@@ -311,7 +386,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       markSaved();
       return next;
     });
-  }, [markSaved]);
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
 
   const updateMemoryVerse = useCallback((id: string, updates: Partial<MemoryVerse>) => {
     setMemoryVerses(prev => {
@@ -327,7 +403,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return next;
       });
     }
-  }, [markSaved]);
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
 
   const deleteMemoryVerse = useCallback((id: string) => {
     setMemoryVerses(prev => {
@@ -336,7 +413,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       markSaved();
       return next;
     });
-  }, [markSaved]);
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
 
   const addGratitudeEntry = useCallback((entry: Omit<GratitudeEntry, 'id' | 'date'>) => {
     const newEntry: GratitudeEntry = {
@@ -350,7 +428,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       markSaved();
       return next;
     });
-  }, [markSaved]);
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
 
   const updateGratitudeEntry = useCallback((id: string, updates: Partial<GratitudeEntry>) => {
     setGratitudeEntries(prev => {
@@ -359,7 +438,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       markSaved();
       return next;
     });
-  }, [markSaved]);
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
 
   const deleteGratitudeEntry = useCallback((id: string) => {
     setGratitudeEntries(prev => {
@@ -368,7 +448,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       markSaved();
       return next;
     });
-  }, [markSaved]);
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
 
   const saveJournalEntry = useCallback((dateKey: string, text: string, verseId: number) => {
     setJournalEntries(prev => {
@@ -393,7 +474,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       markSaved();
       return next;
     });
-  }, [markSaved]);
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
 
   const getJournalEntry = useCallback((dateKey: string): JournalEntry | undefined => {
     return journalEntries.find(e => e.dateKey === dateKey);

@@ -17,10 +17,14 @@ import {
   X,
   PenLine,
   CloudCheck,
+  Cloud,
+  CloudOff,
+  Loader2,
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
+import { useSync } from '@/contexts/SyncContext';
 
 const navItems = [
   { href: '/devotional', label: 'Devotional', icon: Home },
@@ -41,6 +45,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const { lastSaved } = useApp();
+  const { user, syncStatus } = useSync();
 
   return (
     <>
@@ -76,13 +81,25 @@ export function Sidebar() {
         </nav>
 
         <div className="p-4 border-t border-[var(--border-color)] space-y-1">
-          {/* Saved indicator */}
-          {lastSaved && (
+          {/* Sync / save indicator */}
+          {user ? (
+            <div className="flex items-center gap-2 px-4 py-2 text-xs text-[var(--text-muted)]">
+              {syncStatus === 'syncing' ? (
+                <><Loader2 size={14} className="text-amber-500 animate-spin" /><span>Syncing...</span></>
+              ) : syncStatus === 'synced' ? (
+                <><Cloud size={14} className="text-emerald-500" /><span>Synced to cloud</span></>
+              ) : syncStatus === 'error' ? (
+                <><CloudOff size={14} className="text-red-500" /><span>Sync error</span></>
+              ) : (
+                <><Cloud size={14} /><span>Cloud connected</span></>
+              )}
+            </div>
+          ) : lastSaved ? (
             <div className="flex items-center gap-2 px-4 py-2 text-xs text-[var(--text-muted)]">
               <CloudCheck size={14} className="text-emerald-500" />
               <span>Saved locally</span>
             </div>
-          )}
+          ) : null}
           {bottomItems.map(item => {
             const isActive = pathname === item.href;
             return (

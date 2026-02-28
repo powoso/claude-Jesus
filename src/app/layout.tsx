@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { AppProvider } from '@/contexts/AppContext';
+import { SyncProvider } from '@/contexts/SyncContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import { ServiceWorkerRegistrar } from '@/components/ui/ServiceWorkerRegistrar';
 
@@ -40,13 +41,15 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
-        <AppProvider>
-          <ToastProvider>
-            <ServiceWorkerRegistrar />
+        <SyncProvider>
+          <AppProvider>
+            <ToastProvider>
+              <ServiceWorkerRegistrar />
 
-            {children}
-          </ToastProvider>
-        </AppProvider>
+              {children}
+            </ToastProvider>
+          </AppProvider>
+        </SyncProvider>
       </body>
     </html>
   );
