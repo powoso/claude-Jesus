@@ -15,14 +15,16 @@ import {
   Info,
   Menu,
   X,
-  Cross,
+  PenLine,
   CloudCheck,
 } from 'lucide-react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
 
 const navItems = [
   { href: '/devotional', label: 'Devotional', icon: Home },
+  { href: '/journal', label: 'Journal', icon: PenLine },
   { href: '/prayer', label: 'Prayer Journal', icon: BookHeart },
   { href: '/reading', label: 'Reading Plans', icon: BookOpen },
   { href: '/memory', label: 'Scripture Memory', icon: Brain },
@@ -46,9 +48,7 @@ export function Sidebar() {
       <aside className="hidden lg:flex flex-col w-64 h-screen fixed left-0 top-0 bg-[var(--bg-card)] border-r border-[var(--border-color)] z-40">
         <div className="p-6 border-b border-[var(--border-color)]">
           <Link href="/devotional" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-              <Cross size={16} className="text-white" />
-            </div>
+            <Image src="/favicon.svg" alt="Daily Walk" width={32} height={32} className="rounded-lg" />
             <span className="font-heading text-xl font-bold text-[var(--text-primary)]">Daily Walk</span>
           </Link>
         </div>
@@ -107,9 +107,7 @@ export function Sidebar() {
       {/* Mobile Top Bar */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-[var(--bg-card)] border-b border-[var(--border-color)] z-50 flex items-center justify-between px-4">
         <Link href="/devotional" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-            <Cross size={14} className="text-white" />
-          </div>
+          <Image src="/favicon.svg" alt="Daily Walk" width={28} height={28} className="rounded-lg" />
           <span className="font-heading text-lg font-bold text-[var(--text-primary)]">Daily Walk</span>
         </Link>
         <button
@@ -169,7 +167,7 @@ export function Sidebar() {
       {/* Mobile Bottom Tab Bar */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[var(--bg-card)] border-t border-[var(--border-color)] z-40 safe-bottom" aria-label="Bottom navigation">
         <div className="flex items-center justify-around h-16 px-2">
-          {navItems.slice(0, 5).map(item => {
+          {navItems.slice(0, 6).map(item => {
             const isActive = pathname === item.href;
             return (
               <Link

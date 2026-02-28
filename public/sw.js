@@ -5,6 +5,7 @@ const OFFLINE_URL = '/devotional';
 const PRECACHE_URLS = [
   '/',
   '/devotional',
+  '/journal',
   '/prayer',
   '/reading',
   '/memory',
