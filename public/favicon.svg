@@ -1,4 +1,56 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="8" fill="#7C9070"/>
-  <path d="M16 6v20M10 12h12" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <clipPath id="roundRect">
+      <rect width="512" height="512" rx="112" />
+    </clipPath>
+    <radialGradient id="glow" cx="50%" cy="62%" r="45%">
+      <stop offset="0%" stop-color="#F5D990" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#D4A84B" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#7C9070" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6B7F61"/>
+      <stop offset="70%" stop-color="#7C9070"/>
+      <stop offset="100%" stop-color="#8FA682"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#roundRect)">
+    <!-- Background -->
+    <rect width="512" height="512" fill="url(#sky)"/>
+
+    <!-- Sunrise glow -->
+    <ellipse cx="256" cy="340" rx="260" ry="180" fill="url(#glow)"/>
+
+    <!-- Sunrise rays -->
+    <g stroke="#F5D990" stroke-opacity="0.35" stroke-width="3" stroke-linecap="round">
+      <!-- Left rays -->
+      <line x1="256" y1="310" x2="60" y2="200"/>
+      <line x1="256" y1="310" x2="40" y2="280"/>
+      <line x1="256" y1="310" x2="80" y2="360"/>
+      <line x1="256" y1="310" x2="100" y2="140"/>
+      <!-- Right rays -->
+      <line x1="256" y1="310" x2="452" y2="200"/>
+      <line x1="256" y1="310" x2="472" y2="280"/>
+      <line x1="256" y1="310" x2="432" y2="360"/>
+      <line x1="256" y1="310" x2="412" y2="140"/>
+      <!-- Top rays -->
+      <line x1="256" y1="310" x2="180" y2="80"/>
+      <line x1="256" y1="310" x2="332" y2="80"/>
+      <line x1="256" y1="310" x2="256" y2="60"/>
+    </g>
+
+    <!-- Horizon line - subtle -->
+    <line x1="0" y1="340" x2="512" y2="340" stroke="#F5D990" stroke-opacity="0.2" stroke-width="2"/>
+
+    <!-- Sun semicircle at horizon -->
+    <path d="M180 340 A76 76 0 0 1 332 340" fill="#F5D990" fill-opacity="0.5"/>
+
+    <!-- Cross shadow -->
+    <rect x="240" y="98" width="36" height="260" rx="6" fill="#5A6B52" fill-opacity="0.3" transform="translate(4,4)"/>
+    <rect x="176" y="168" width="164" height="36" rx="6" fill="#5A6B52" fill-opacity="0.3" transform="translate(4,4)"/>
+
+    <!-- Cross -->
+    <rect x="238" y="95" width="36" height="265" rx="6" fill="white"/>
+    <rect x="174" y="165" width="164" height="36" rx="6" fill="white"/>
+  </g>
 </svg>

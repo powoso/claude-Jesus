@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { AppProvider } from '@/contexts/AppContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import { ServiceWorkerRegistrar } from '@/components/ui/ServiceWorkerRegistrar';
-import { InstallPrompt } from '@/components/ui/InstallPrompt';
+
 import './globals.css';
 
 export const viewport: Viewport = {
@@ -43,7 +43,7 @@ export default function RootLayout({
         <AppProvider>
           <ToastProvider>
             <ServiceWorkerRegistrar />
-            <InstallPrompt />
+
             {children}
           </ToastProvider>
         </AppProvider>
