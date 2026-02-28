@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { AppProvider } from '@/contexts/AppContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import { ServiceWorkerRegistrar } from '@/components/ui/ServiceWorkerRegistrar';
+import { InstallPrompt } from '@/components/ui/InstallPrompt';
 import './globals.css';
 
 export const viewport: Viewport = {
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
   description: 'Your personal space to grow closer to Jesus, one day at a time. Daily devotionals, prayer journal, Bible reading plans, scripture memory, and more.',
   icons: {
     icon: '/favicon.svg',
-    apple: '/favicon.svg',
+    apple: '/icon-192.png',
   },
   manifest: '/manifest.json',
   appleWebApp: {
@@ -42,6 +43,7 @@ export default function RootLayout({
         <AppProvider>
           <ToastProvider>
             <ServiceWorkerRegistrar />
+            <InstallPrompt />
             {children}
           </ToastProvider>
         </AppProvider>
