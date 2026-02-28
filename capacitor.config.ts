@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.dailywalk.app',
+  appId: 'com.powoso.dailywalk',
   appName: 'Daily Walk',
   webDir: 'out',
   server: {
