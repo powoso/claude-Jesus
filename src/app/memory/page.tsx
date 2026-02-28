@@ -124,7 +124,7 @@ export default function MemoryPage() {
     if (success) {
       showToast(newInterval > 1 ? `Next review in ${newInterval} days` : 'Review again tomorrow');
     } else {
-      showToast('Keep practicing \u2014 you\'ll get it!');
+      showToast('Keep practicing — you\'ll get it!');
     }
   };
 
@@ -142,7 +142,7 @@ export default function MemoryPage() {
     <AppLayout>
       <PageHeader
         title="Scripture Memory"
-        subtitle="I have hidden your word in my heart \u2014 Psalm 119:11"
+        subtitle="I have hidden your word in my heart — Psalm 119:11"
         icon={<Brain size={28} />}
         action={
           <div className="flex items-center gap-3">
