@@ -15,7 +15,9 @@ export const metadata: Metadata = {
   title: 'Daily Walk — A Jesus-Centered Devotional App',
   description: 'Your personal space to grow closer to Jesus, one day at a time. Daily devotionals, prayer journal, Bible reading plans, scripture memory, and more.',
   icons: {
-    icon: '/favicon.svg',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
     apple: '/icon-192.png',
   },
   manifest: '/manifest.json',
