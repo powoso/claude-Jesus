@@ -1,0 +1,104 @@
+=============================================
+  GOOGLE PLAY STORE LISTING — DAILY WALK
+=============================================
+
+APP NAME (30 chars max):
+Daily Walk — Jesus & Bible
+
+
+SHORT DESCRIPTION (80 chars max):
+Grow closer to Jesus daily with devotionals, prayer journal & Scripture memory.
+
+
+FULL DESCRIPTION:
+Daily Walk is your sacred digital space for growing closer to Jesus — one day at a time.
+
+No ads. No social media. No distractions. Just you and God.
+
+Whether you're a new believer or have walked with Christ for decades, Daily Walk provides a beautiful, private sanctuary for deepening your relationship with Jesus through six powerful spiritual disciplines.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✦ DAILY DEVOTIONALS
+Start each morning with a fresh Bible verse and guided reflection questions. With 365 unique verses covering themes of Faith, Hope, Love, Grace, Wisdom, and more — you'll never run out of daily encouragement. Journal your thoughts and prayers right alongside each day's Scripture.
+
+✦ PRAYER JOURNAL
+Organize your prayer life with seven categories: Gratitude, Intercession, Confession, Petition, Praise, Healing, and Guidance. Track active prayers, mark them as answered, and build a beautiful timeline of God's faithfulness in your life.
+
+✦ BIBLE READING PLANS
+Follow structured reading plans with daily passages and visual progress tracking. See how far you've come and stay motivated with reading streaks and estimated completion dates.
+
+✦ SCRIPTURE MEMORY STUDIO
+Memorize God's Word with a science-backed spaced repetition system — the same proven method used by top language learners worldwide. Three practice modes (First Letter hints, Fill in the Blank, and Full Recall) exercise different memory pathways so verses truly stick in your heart.
+
+✦ GRATITUDE WALL
+Capture moments of thankfulness on a beautiful, colorful wall. Look back at "This Time Last Year" entries to remember God's blessings across seasons.
+
+✦ SPIRITUAL GROWTH TRACKER
+See your growth visually with weekly check-ins across five dimensions: Prayer, Scripture Reading, Worship, Service, and Fellowship. Beautiful charts reveal patterns and progress over time — with gentle encouragement, never guilt.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WHY DAILY WALK?
+
+♡ 100% Private — Your prayers and reflections stay on YOUR device. We never collect, store, or see your data. Period.
+
+♡ Completely Free — No ads, no subscriptions, no in-app purchases. This is a ministry, not a business.
+
+♡ Beautiful Design — Warm, calming aesthetics with light & dark mode create a space that feels sacred, not cluttered.
+
+♡ Grace Over Guilt — Streaks motivate without condemning. Every day is a fresh start with God.
+
+♡ Works Offline — Access your devotionals, prayers, and memory verses anytime, anywhere — no internet required.
+
+♡ Backup & Restore — Export and import your data anytime with simple JSON backup.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+"Your word is a lamp for my feet, a light on my path." — Psalm 119:105
+
+Start your Daily Walk with Jesus today.
+
+
+CATEGORY:
+Health & Fitness (Primary)
+Books & Reference (Secondary — if available)
+
+
+TAGS (comma-separated):
+bible, devotional, prayer journal, scripture memory, jesus, christian, bible study, daily devotional, prayer, gratitude, bible reading plan, spiritual growth, faith, worship, bible verse
+
+
+CONTENT RATING:
+Everyone
+
+
+PRIVACY POLICY URL:
+https://daily-walk.netlify.app/privacy
+
+
+=============================================
+  APPLE APP STORE LISTING
+=============================================
+
+APP NAME:
+Daily Walk — Jesus & Bible
+
+SUBTITLE (30 chars):
+Devotionals & Prayer Journal
+
+PROMOTIONAL TEXT (170 chars):
+Your sacred space to grow closer to Jesus. Daily devotionals, prayer journal, Scripture memory with spaced repetition, gratitude wall & spiritual growth tracking. Free.
+
+DESCRIPTION:
+(Same as Google Play description above)
+
+KEYWORDS (100 chars, comma-separated):
+bible,devotional,prayer,journal,scripture,memory,jesus,christian,gratitude,faith,worship,reading
+
+CATEGORY:
+Health & Fitness (Primary)
+Lifestyle (Secondary)
+
+AGE RATING:
+4+
