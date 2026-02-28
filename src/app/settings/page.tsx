@@ -206,140 +206,158 @@ export default function SettingsPage() {
         </Card>
 
         {/* Cloud Sync */}
-        {sync.available && (
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">Cloud Sync</h2>
-              {sync.user && (
-                <div className="flex items-center gap-1.5">
-                  {sync.syncStatus === 'syncing' ? (
-                    <Loader2 size={14} className="text-amber-500 animate-spin" />
-                  ) : sync.syncStatus === 'synced' ? (
-                    <Cloud size={14} className="text-emerald-500" />
-                  ) : sync.syncStatus === 'error' ? (
-                    <CloudOff size={14} className="text-red-500" />
-                  ) : (
-                    <Cloud size={14} className="text-[var(--text-muted)]" />
-                  )}
-                  <span className={`text-xs font-medium ${syncStatusColor[sync.syncStatus]}`}>
-                    {syncStatusLabel[sync.syncStatus]}
-                  </span>
+        <Card>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">Cloud Sync</h2>
+            {sync.available && sync.user && (
+              <div className="flex items-center gap-1.5">
+                {sync.syncStatus === 'syncing' ? (
+                  <Loader2 size={14} className="text-amber-500 animate-spin" />
+                ) : sync.syncStatus === 'synced' ? (
+                  <Cloud size={14} className="text-emerald-500" />
+                ) : sync.syncStatus === 'error' ? (
+                  <CloudOff size={14} className="text-red-500" />
+                ) : (
+                  <Cloud size={14} className="text-[var(--text-muted)]" />
+                )}
+                <span className={`text-xs font-medium ${syncStatusColor[sync.syncStatus]}`}>
+                  {syncStatusLabel[sync.syncStatus]}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {!sync.available ? (
+            /* Firebase not configured */
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 py-2">
+                <CloudOff size={18} className="text-[var(--text-muted)]" />
+                <p className="text-sm text-[var(--text-secondary)]">
+                  Cloud sync is not yet configured. Your data is saved locally on this device.
+                </p>
+              </div>
+              <div className="bg-[var(--bg-secondary)] rounded-xl p-4 text-xs text-[var(--text-muted)] space-y-2">
+                <p className="font-medium text-[var(--text-secondary)]">To enable cloud sync:</p>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>Create a Firebase project at console.firebase.google.com</li>
+                  <li>Enable Email/Password authentication</li>
+                  <li>Enable Cloud Firestore database</li>
+                  <li>Add your Firebase config as environment variables in your hosting platform</li>
+                  <li>Redeploy the app</li>
+                </ol>
+              </div>
+            </div>
+          ) : sync.user ? (
+            /* Signed in */
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 py-2">
+                <div className="w-8 h-8 rounded-full bg-[var(--accent)]/10 flex items-center justify-center">
+                  <Mail size={14} className="text-[var(--accent)]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[var(--text-primary)] truncate">{sync.user.email}</p>
+                  <p className="text-xs text-[var(--text-muted)]">Signed in — data syncs automatically</p>
+                </div>
+              </div>
+
+              {sync.lastError && (
+                <div className="bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2 flex items-center gap-2">
+                  <AlertCircle size={14} className="text-red-500 flex-shrink-0" />
+                  <p className="text-xs text-red-600 dark:text-red-400">{sync.lastError}</p>
                 </div>
               )}
-            </div>
 
-            {sync.user ? (
-              /* Signed in */
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 py-2">
-                  <div className="w-8 h-8 rounded-full bg-[var(--accent)]/10 flex items-center justify-center">
-                    <Mail size={14} className="text-[var(--accent)]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[var(--text-primary)] truncate">{sync.user.email}</p>
-                    <p className="text-xs text-[var(--text-muted)]">Signed in — data syncs automatically</p>
-                  </div>
+              <div className="flex gap-2">
+                <Button variant="secondary" size="sm" onClick={handleManualSync}>
+                  <RefreshCw size={14} />
+                  Sync Now
+                </Button>
+                <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                  <LogOut size={14} />
+                  Sign Out
+                </Button>
+              </div>
+            </div>
+          ) : (
+            /* Sign in / Sign up form */
+            <div>
+              <p className="text-sm text-[var(--text-secondary)] mb-4">
+                Sign in to sync your data across all your devices. Your entries, prayers, and progress stay safe in the cloud.
+              </p>
+
+              <form onSubmit={handleAuth} className="space-y-3">
+                <div className="relative">
+                  <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); setAuthError(null); setResetSent(false); }}
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] text-sm"
+                    required
+                    autoComplete="email"
+                  />
+                </div>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => { setPassword(e.target.value); setAuthError(null); }}
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] text-sm"
+                    required
+                    minLength={6}
+                    autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'}
+                  />
                 </div>
 
-                {sync.lastError && (
-                  <div className="bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2 flex items-center gap-2">
-                    <AlertCircle size={14} className="text-red-500 flex-shrink-0" />
-                    <p className="text-xs text-red-600 dark:text-red-400">{sync.lastError}</p>
+                {authError && (
+                  <div className="flex items-center gap-2 text-xs text-red-500">
+                    <AlertCircle size={12} />
+                    {authError}
                   </div>
                 )}
 
-                <div className="flex gap-2">
-                  <Button variant="secondary" size="sm" onClick={handleManualSync}>
-                    <RefreshCw size={14} />
-                    Sync Now
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={handleSignOut}>
-                    <LogOut size={14} />
-                    Sign Out
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              /* Sign in / Sign up form */
-              <div>
-                <p className="text-sm text-[var(--text-secondary)] mb-4">
-                  Sign in to sync your data across all your devices. Your entries, prayers, and progress stay safe in the cloud.
-                </p>
-
-                <form onSubmit={handleAuth} className="space-y-3">
-                  <div className="relative">
-                    <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                    <input
-                      type="email"
-                      placeholder="Email"
-                      value={email}
-                      onChange={(e) => { setEmail(e.target.value); setAuthError(null); setResetSent(false); }}
-                      className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] text-sm"
-                      required
-                      autoComplete="email"
-                    />
+                {resetSent && (
+                  <div className="flex items-center gap-2 text-xs text-emerald-500">
+                    <Check size={12} />
+                    Reset email sent — check your inbox.
                   </div>
-                  <div className="relative">
-                    <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                    <input
-                      type="password"
-                      placeholder="Password"
-                      value={password}
-                      onChange={(e) => { setPassword(e.target.value); setAuthError(null); }}
-                      className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] text-sm"
-                      required
-                      minLength={6}
-                      autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'}
-                    />
-                  </div>
+                )}
 
-                  {authError && (
-                    <div className="flex items-center gap-2 text-xs text-red-500">
-                      <AlertCircle size={12} />
-                      {authError}
-                    </div>
+                <Button type="submit" className="w-full" disabled={authLoading}>
+                  {authLoading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : authMode === 'signin' ? (
+                    <><LogIn size={16} /> Sign In</>
+                  ) : (
+                    <><UserPlus size={16} /> Create Account</>
                   )}
+                </Button>
 
-                  {resetSent && (
-                    <div className="flex items-center gap-2 text-xs text-emerald-500">
-                      <Check size={12} />
-                      Reset email sent — check your inbox.
-                    </div>
-                  )}
-
-                  <Button type="submit" className="w-full" disabled={authLoading}>
-                    {authLoading ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : authMode === 'signin' ? (
-                      <><LogIn size={16} /> Sign In</>
-                    ) : (
-                      <><UserPlus size={16} /> Create Account</>
-                    )}
-                  </Button>
-
-                  <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between text-xs">
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode(authMode === 'signin' ? 'signup' : 'signin'); setAuthError(null); }}
+                    className="text-[var(--accent)] hover:underline"
+                  >
+                    {authMode === 'signin' ? 'Create an account' : 'Already have an account?'}
+                  </button>
+                  {authMode === 'signin' && (
                     <button
                       type="button"
-                      onClick={() => { setAuthMode(authMode === 'signin' ? 'signup' : 'signin'); setAuthError(null); }}
-                      className="text-[var(--accent)] hover:underline"
+                      onClick={handleResetPassword}
+                      className="text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
                     >
-                      {authMode === 'signin' ? 'Create an account' : 'Already have an account?'}
+                      Forgot password?
                     </button>
-                    {authMode === 'signin' && (
-                      <button
-                        type="button"
-                        onClick={handleResetPassword}
-                        className="text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
-                      >
-                        Forgot password?
-                      </button>
-                    )}
-                  </div>
-                </form>
-              </div>
-            )}
-          </Card>
-        )}
+                  )}
+                </div>
+              </form>
+            </div>
+          )}
+        </Card>
 
         {/* Data Management */}
         <Card>
