@@ -17,10 +17,13 @@ import { useApp } from '@/contexts/AppContext';
 import { useToast } from '@/components/ui/Toast';
 import { readingPlans } from '@/data/reading-plans';
 import { formatShortDate } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 export default function ReadingPage() {
   const { readingProgress, startPlan, toggleReadingDay, resetPlan } = useApp();
   const { showToast } = useToast();
+  const { t } = useTranslation();
+  const r = t.reading;
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
 
   const selectedPlan = selectedPlanId ? readingPlans.find(p => p.id === selectedPlanId) : null;
@@ -63,7 +66,7 @@ export default function ReadingPage() {
             onClick={() => setSelectedPlanId(null)}
             className="flex items-center gap-1 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] mb-4"
           >
-            <ArrowLeft size={16} /> Back to Plans
+            <ArrowLeft size={16} /> {r.backToPlans}
           </button>
 
           <PageHeader
@@ -76,13 +79,13 @@ export default function ReadingPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    if (confirm('Reset all progress for this plan?')) { resetPlan(selectedPlan.id); showToast('Plan progress reset'); }
+                    if (confirm(r.resetConfirm)) { resetPlan(selectedPlan.id); showToast(r.planReset); }
                   }}
                 >
-                  <RotateCcw size={14} /> Reset
+                  <RotateCcw size={14} /> {t.common.reset}
                 </Button>
               ) : (
-                <Button onClick={() => startPlan(selectedPlan.id)}>Start Plan</Button>
+                <Button onClick={() => startPlan(selectedPlan.id)}>{r.startPlan}</Button>
               )
             }
           />
@@ -93,11 +96,11 @@ export default function ReadingPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
               <div>
                 <p className="text-sm text-[var(--text-secondary)]">
-                  <span className="font-semibold text-[var(--text-primary)]">{completedCount}</span> of {totalDays} days completed
+                  {r.daysCompleted.replace('{completed}', String(completedCount)).replace('{total}', String(totalDays))}
                 </p>
                 {estimatedCompletion && (
                   <p className="text-xs text-[var(--text-muted)] flex items-center gap-1 mt-1">
-                    <Calendar size={12} /> Estimated completion: {estimatedCompletion}
+                    <Calendar size={12} /> {r.estimatedCompletion.replace('{date}', estimatedCompletion)}
                   </p>
                 )}
               </div>
@@ -105,7 +108,7 @@ export default function ReadingPage() {
                 {streak > 1 && (
                   <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
                     <Flame size={14} />
-                    <span className="text-xs font-semibold">{streak} day streak</span>
+                    <span className="text-xs font-semibold">{streak + ' ' + t.common.dayStreak}</span>
                   </div>
                 )}
               </div>
@@ -116,8 +119,8 @@ export default function ReadingPage() {
 
         {!progress && (
           <Card className="mb-6 text-center py-8">
-            <p className="text-[var(--text-muted)] mb-4">Ready to begin this reading plan?</p>
-            <Button onClick={() => startPlan(selectedPlan.id)}>Start Reading</Button>
+            <p className="text-[var(--text-muted)] mb-4">{r.readyToBegin}</p>
+            <Button onClick={() => startPlan(selectedPlan.id)}>{r.startReading}</Button>
           </Card>
         )}
 
@@ -139,7 +142,7 @@ export default function ReadingPage() {
                       ? 'bg-[var(--accent)]/5 border-[var(--accent)]/20'
                       : 'bg-[var(--bg-card)] border-[var(--border-color)] hover:border-[var(--accent)]/30'
                   } ${!progress ? 'opacity-60' : ''}`}
-                  aria-label={`Day ${reading.day}: ${reading.title}${isCompleted ? ' (completed)' : ''}`}
+                  aria-label={`${t.common.day} ${reading.day}: ${reading.title}${isCompleted ? ' (completed)' : ''}`}
                 >
                   <div className="flex-shrink-0">
                     {isCompleted ? (
@@ -150,7 +153,7 @@ export default function ReadingPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs font-medium text-[var(--text-muted)]">Day {reading.day}</span>
+                      <span className="text-xs font-medium text-[var(--text-muted)]">{t.common.day + ' ' + reading.day}</span>
                       <span className="text-xs text-[var(--border-color)]">•</span>
                       <span className="text-sm font-medium text-[var(--text-primary)] truncate">{reading.title}</span>
                     </div>
@@ -170,8 +173,8 @@ export default function ReadingPage() {
   return (
     <AppLayout>
       <PageHeader
-        title="Bible Reading Plans"
-        subtitle="All Scripture is God-breathed and useful for teaching."
+        title={r.title}
+        subtitle={r.subtitle}
         icon={<BookOpen size={28} />}
       />
 
@@ -199,7 +202,7 @@ export default function ReadingPage() {
                 {planProgress ? (
                   <ProgressBar value={planProgress.completedDays.length} max={plan.totalDays} size="sm" />
                 ) : (
-                  <Badge variant="info">Not started</Badge>
+                  <Badge variant="info">{t.common.notStarted}</Badge>
                 )}
               </Card>
             </motion.div>

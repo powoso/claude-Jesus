@@ -23,6 +23,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Badge } from '@/components/ui/Badge';
 import { useToast } from '@/components/ui/Toast';
 import { useApp } from '@/contexts/AppContext';
+import { useTranslation } from '@/lib/i18n';
 import { copyToClipboard } from '@/lib/utils';
 import {
   bibleBooks,
@@ -107,6 +108,8 @@ function getChapterKey(book: string, chapter: number): string {
 export default function BiblePage() {
   const { showToast } = useToast();
   const { bibleChaptersRead, toggleChapterRead } = useApp();
+  const { t } = useTranslation();
+  const b = t.bible;
   const contentRef = useRef<HTMLDivElement>(null);
   const chaptersReadSet = new Set(bibleChaptersRead);
 
@@ -174,12 +177,12 @@ export default function BiblePage() {
 
       setChapterData(chapterResult);
     } catch {
-      setError('Could not load this chapter. Please check your connection and try again.');
+      setError(b.loadError);
       setChapterData(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [b.loadError]);
 
   // Load chapter when selection changes
   useEffect(() => {
@@ -228,11 +231,10 @@ export default function BiblePage() {
     setBookmarks(prev => {
       const key = `${selectedBook} ${selectedChapter}`;
       const updated = prev.includes(key) ? prev.filter(b => b !== key) : [...prev, key];
-      saveBookmarks(updated);
-      showToast(updated.includes(key) ? 'Bookmark added' : 'Bookmark removed', 'success');
+      showToast(updated.includes(key) ? b.bookmarkAdded : b.bookmarkRemoved, 'success');
       return updated;
     });
-  }, [selectedBook, selectedChapter, showToast]);
+  }, [selectedBook, selectedChapter, showToast, b.bookmarkAdded, b.bookmarkRemoved]);
 
   const goToBookmark = useCallback((bm: string) => {
     const match = bm.match(/^(.+)\s(\d+)$/);
@@ -250,8 +252,8 @@ export default function BiblePage() {
       ? chapterData.verses.map(v => `${v.verse}. ${v.text.trim()}`).join('\n')
       : chapterData.text;
     await copyToClipboard(`${chapterData.reference}\n\n${text}`);
-    showToast('Chapter copied to clipboard', 'success');
-  }, [chapterData, showToast]);
+    showToast(b.chapterCopied, 'success');
+  }, [chapterData, showToast, b.chapterCopied]);
 
   // Share chapter
   const handleShare = useCallback(async () => {
@@ -277,8 +279,8 @@ export default function BiblePage() {
   return (
     <AppLayout>
       <PageHeader
-        title="The Bible"
-        subtitle="Read God's Word — all 66 books, 1,189 chapters"
+        title={b.title}
+        subtitle={b.subtitle}
         icon={<Library size={28} />}
       />
 
@@ -286,9 +288,9 @@ export default function BiblePage() {
       {bibleChaptersRead.length > 0 && (
         <Card className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-[var(--text-secondary)]">Reading Progress</span>
+            <span className="text-xs font-medium text-[var(--text-secondary)]">{b.readingProgress}</span>
             <span className="text-xs font-bold text-[var(--accent)]">
-              {bibleChaptersRead.length} / {TOTAL_CHAPTERS} chapters ({Math.round((bibleChaptersRead.length / TOTAL_CHAPTERS) * 100)}%)
+              {b.chaptersProgress.replace('{read}', String(bibleChaptersRead.length)).replace('{total}', String(TOTAL_CHAPTERS)).replace('{percent}', String(Math.round((bibleChaptersRead.length / TOTAL_CHAPTERS) * 100)))}
             </span>
           </div>
           <div className="w-full h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
@@ -320,7 +322,7 @@ export default function BiblePage() {
             size="sm"
             onClick={() => { setShowChapterPicker(!showChapterPicker); setShowBookPicker(false); setShowBookmarks(false); }}
           >
-            Chapter {selectedChapter}
+            {t.common.chapter + ' ' + selectedChapter}
             <ChevronDown size={12} />
           </Button>
 
@@ -342,16 +344,16 @@ export default function BiblePage() {
           <div className="flex-1" />
 
           {/* Actions */}
-          <Button variant="ghost" size="sm" onClick={toggleBookmark} title={isBookmarked ? 'Remove bookmark' : 'Bookmark this chapter'}>
+          <Button variant="ghost" size="sm" onClick={toggleBookmark} title={isBookmarked ? b.removeBookmark : b.bookmarkChapter}>
             <Bookmark size={14} className={isBookmarked ? 'fill-[var(--accent-gold)] text-[var(--accent-gold)]' : ''} />
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => { setShowBookmarks(!showBookmarks); setShowBookPicker(false); setShowChapterPicker(false); }} title="View bookmarks">
+          <Button variant="ghost" size="sm" onClick={() => { setShowBookmarks(!showBookmarks); setShowBookPicker(false); setShowChapterPicker(false); }} title={b.viewBookmarks}>
             <Library size={14} />
           </Button>
-          <Button variant="ghost" size="sm" onClick={handleCopyChapter} title="Copy chapter" disabled={!chapterData}>
+          <Button variant="ghost" size="sm" onClick={handleCopyChapter} title={b.copyChapter} disabled={!chapterData}>
             <Copy size={14} />
           </Button>
-          <Button variant="ghost" size="sm" onClick={handleShare} title="Share" disabled={!chapterData}>
+          <Button variant="ghost" size="sm" onClick={handleShare} title={b.share} disabled={!chapterData}>
             <Share2 size={14} />
           </Button>
         </div>
@@ -368,13 +370,13 @@ export default function BiblePage() {
           >
             <Card>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-heading text-sm font-semibold text-[var(--text-primary)]">Bookmarks</h3>
+                <h3 className="font-heading text-sm font-semibold text-[var(--text-primary)]">{b.bookmarks}</h3>
                 <button onClick={() => setShowBookmarks(false)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
                   <X size={16} />
                 </button>
               </div>
               {bookmarks.length === 0 ? (
-                <p className="text-sm text-[var(--text-muted)]">No bookmarks yet. Tap the bookmark icon to save your place.</p>
+                <p className="text-sm text-[var(--text-muted)]">{b.noBookmarks}</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {bookmarks.map(bm => (
@@ -408,7 +410,7 @@ export default function BiblePage() {
           >
             <Card>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-heading text-sm font-semibold text-[var(--text-primary)]">Select a Book</h3>
+                <h3 className="font-heading text-sm font-semibold text-[var(--text-primary)]">{b.selectBook}</h3>
                 <button onClick={() => setShowBookPicker(false)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
                   <X size={16} />
                 </button>
@@ -424,7 +426,7 @@ export default function BiblePage() {
                       : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)]'
                   }`}
                 >
-                  Old Testament
+                  {b.oldTestament}
                 </button>
                 <button
                   onClick={() => setPickerTestament('NT')}
@@ -434,7 +436,7 @@ export default function BiblePage() {
                       : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)]'
                   }`}
                 >
-                  New Testament
+                  {b.newTestament}
                 </button>
               </div>
 
@@ -480,7 +482,7 @@ export default function BiblePage() {
             <Card>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-heading text-sm font-semibold text-[var(--text-primary)]">
-                  {selectedBook} — {currentBook.chapters} chapter{currentBook.chapters !== 1 ? 's' : ''}
+                  {selectedBook + ' — ' + currentBook.chapters + ' ' + (currentBook.chapters !== 1 ? t.common.chapters : t.common.chapter)}
                 </h3>
                 <button onClick={() => setShowChapterPicker(false)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
                   <X size={16} />
@@ -516,7 +518,7 @@ export default function BiblePage() {
         {loading && (
           <div className="flex flex-col items-center justify-center py-24 gap-3">
             <Loader2 size={32} className="animate-spin text-[var(--accent)]" />
-            <p className="text-sm text-[var(--text-muted)]">Loading {selectedBook} {selectedChapter}...</p>
+            <p className="text-sm text-[var(--text-muted)]">{b.loadingChapter.replace('{book}', selectedBook).replace('{chapter}', String(selectedChapter))}</p>
           </div>
         )}
 
@@ -524,7 +526,7 @@ export default function BiblePage() {
           <Card className="border-red-200 dark:border-red-800">
             <p className="text-sm text-red-600 dark:text-red-400 mb-3">{error}</p>
             <Button variant="secondary" size="sm" onClick={() => fetchChapter(selectedBook, selectedChapter, translation)}>
-              Try Again
+              {t.common.tryAgain}
             </Button>
           </Card>
         )}
@@ -575,11 +577,11 @@ export default function BiblePage() {
                     size="sm"
                     onClick={() => {
                       toggleChapterRead(key);
-                      if (!isRead) showToast(`${selectedBook} ${selectedChapter} marked as read`, 'success');
+                      if (!isRead) showToast(b.markedAsRead.replace('{book}', selectedBook).replace('{chapter}', String(selectedChapter)), 'success');
                     }}
                   >
                     <CheckCircle2 size={14} />
-                    {isRead ? 'Read' : 'Mark as read'}
+                    {isRead ? b.read : b.markRead}
                   </Button>
                 </div>
               );
@@ -596,16 +598,16 @@ export default function BiblePage() {
               >
                 <ChevronLeft size={16} />
                 <span className="hidden sm:inline">
-                  {prev ? `${prev.book} ${prev.chapter}` : 'Start'}
+                  {prev ? `${prev.book} ${prev.chapter}` : t.common.start}
                 </span>
-                <span className="sm:hidden">Prev</span>
+                <span className="sm:hidden">{t.common.prev}</span>
               </Button>
 
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
-                title="Scroll to top"
+                title={b.scrollToTop}
               >
                 <ArrowUp size={14} />
               </Button>
@@ -618,18 +620,18 @@ export default function BiblePage() {
                 className={!next ? 'opacity-40' : ''}
               >
                 <span className="hidden sm:inline">
-                  {next ? `${next.book} ${next.chapter}` : 'End'}
+                  {next ? `${next.book} ${next.chapter}` : t.common.end}
                 </span>
-                <span className="sm:hidden">Next</span>
+                <span className="sm:hidden">{t.common.next}</span>
                 <ChevronRight size={16} />
               </Button>
             </div>
 
             {/* Quick Info */}
             <div className="flex flex-wrap justify-center gap-2 mb-4">
-              <Badge variant="accent">{currentBook?.testament === 'OT' ? 'Old Testament' : 'New Testament'}</Badge>
+              <Badge variant="accent">{currentBook?.testament === 'OT' ? b.oldTestament : b.newTestament}</Badge>
               <Badge variant="accent">{currentBook?.category}</Badge>
-              <Badge variant="accent">{currentBook?.chapters} chapters</Badge>
+              <Badge variant="accent">{currentBook?.chapters + ' ' + t.common.chapters}</Badge>
             </div>
           </motion.div>
         )}

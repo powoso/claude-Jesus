@@ -14,14 +14,7 @@ import {
 import Image from 'next/image';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/Button';
-
-const features = [
-  { icon: Home, title: 'Daily Devotionals', description: 'Start each day with God\'s Word and reflective questions.' },
-  { icon: BookHeart, title: 'Prayer Journal', description: 'Pour out your heart and track God\'s faithfulness.' },
-  { icon: BookOpen, title: 'Reading Plans', description: 'Journey through Scripture with structured reading plans.' },
-  { icon: Heart, title: 'Gratitude Wall', description: 'Capture moments of praise and thankfulness.' },
-  { icon: TrendingUp, title: 'Growth Tracker', description: 'Reflect on your spiritual journey with gentle check-ins.' },
-];
+import { useTranslation } from '@/lib/i18n';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -40,6 +33,16 @@ export default function LandingPage() {
   const router = useRouter();
   const { settings, updateSettings, isHydrated } = useApp();
   const [mounted, setMounted] = useState(false);
+  const { t } = useTranslation();
+  const l = t.landing;
+
+  const features = [
+    { icon: Home, title: l.featureDevotionals, description: l.featureDevotionalsDesc },
+    { icon: BookHeart, title: l.featurePrayer, description: l.featurePrayerDesc },
+    { icon: BookOpen, title: l.featureReading, description: l.featureReadingDesc },
+    { icon: Heart, title: l.featureGratitude, description: l.featureGratitudeDesc },
+    { icon: TrendingUp, title: l.featureGrowth, description: l.featureGrowthDesc },
+  ];
 
   useEffect(() => {
     setMounted(true);
@@ -60,7 +63,7 @@ export default function LandingPage() {
     return (
       <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
         <div className="w-10 h-10 rounded-xl animate-pulse">
-          <Image src="/favicon.svg" alt="Daily Walk" width={40} height={40} className="rounded-xl" />
+          <Image src="/favicon.svg" alt={t.common.appName} width={40} height={40} className="rounded-xl" />
         </div>
       </div>
     );
@@ -83,10 +86,10 @@ export default function LandingPage() {
           className="mb-8"
         >
           <div className="w-20 h-20 mx-auto rounded-2xl mb-6 shadow-lg overflow-hidden">
-            <Image src="/favicon.svg" alt="Daily Walk" width={80} height={80} className="w-full h-full" />
+            <Image src="/favicon.svg" alt={t.common.appName} width={80} height={80} className="w-full h-full" />
           </div>
           <h1 className="font-heading text-5xl sm:text-6xl md:text-7xl font-bold text-[var(--text-primary)] mb-4 tracking-tight">
-            Daily Walk
+            {t.common.appName}
           </h1>
         </motion.div>
 
@@ -97,9 +100,9 @@ export default function LandingPage() {
           className="max-w-2xl mx-auto mb-10"
         >
           <blockquote className="font-scripture text-xl sm:text-2xl text-[var(--text-secondary)] mb-4 leading-relaxed">
-            &ldquo;I am the light of the world. Whoever follows me will never walk in darkness, but will have the light of life.&rdquo;
+            &ldquo;{l.heroQuote}&rdquo;
           </blockquote>
-          <p className="text-sm text-[var(--text-muted)] font-medium">— John 8:12</p>
+          <p className="text-sm text-[var(--text-muted)] font-medium">{l.heroRef}</p>
         </motion.div>
 
         <motion.p
@@ -108,7 +111,7 @@ export default function LandingPage() {
           transition={{ delay: 0.5 }}
           className="text-lg text-[var(--text-muted)] mb-10 max-w-md"
         >
-          Your personal space to grow closer to Jesus, one day at a time.
+          {l.tagline}
         </motion.p>
 
         <motion.div
@@ -117,7 +120,7 @@ export default function LandingPage() {
           transition={{ delay: 0.7 }}
         >
           <Button size="lg" onClick={handleBeginWalk} className="text-base">
-            Begin Your Walk
+            {l.beginWalk}
             <ArrowRight size={18} />
           </Button>
         </motion.div>
@@ -148,10 +151,10 @@ export default function LandingPage() {
             className="text-center mb-16"
           >
             <h2 className="font-heading text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
-              Tools for Your Journey
+              {l.toolsHeading}
             </h2>
             <p className="text-[var(--text-muted)] max-w-lg mx-auto">
-              Everything you need to nurture your relationship with Christ in one beautiful, distraction-free space.
+              {l.toolsSubtitle}
             </p>
           </motion.div>
 
@@ -187,15 +190,15 @@ export default function LandingPage() {
       <footer className="relative py-16 px-6 border-t border-[var(--border-color)]">
         <div className="max-w-2xl mx-auto text-center">
           <div className="w-10 h-10 mx-auto rounded-xl mb-4 overflow-hidden">
-            <Image src="/favicon.svg" alt="Daily Walk" width={40} height={40} className="w-full h-full" />
+            <Image src="/favicon.svg" alt={t.common.appName} width={40} height={40} className="w-full h-full" />
           </div>
           <p className="text-sm text-[var(--text-muted)] mb-6">
-            Built with love for the glory of God
+            {l.footerBuilt}
           </p>
           <p className="font-scripture text-sm text-[var(--accent)]">
-            &ldquo;For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.&rdquo;
+            &ldquo;{l.footerVerse}&rdquo;
           </p>
-          <p className="text-xs text-[var(--text-muted)] mt-2">— John 3:16</p>
+          <p className="text-xs text-[var(--text-muted)] mt-2">{l.footerRef}</p>
         </div>
       </footer>
     </div>
