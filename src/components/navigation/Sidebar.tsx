@@ -187,33 +187,33 @@ export function Sidebar() {
 
       {/* Mobile Bottom Tab Bar */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[var(--bg-card)] border-t border-[var(--border-color)] z-40 safe-bottom" aria-label="Bottom navigation">
-        <div className="flex items-center justify-around h-16 px-2">
-          {navItems.slice(0, 6).map(item => {
+        <div className="flex items-center justify-around h-16 px-1">
+          {navItems.slice(0, 7).map(item => {
             const isActive = pathname === item.href;
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] rounded-xl transition-colors',
+                  'flex flex-col items-center justify-center gap-0.5 min-w-[40px] min-h-[40px] rounded-xl transition-colors',
                   isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'
                 )}
                 aria-current={isActive ? 'page' : undefined}
               >
-                <item.icon size={20} />
-                <span className="text-[10px] font-medium">{item.label.split(' ')[0]}</span>
+                <item.icon size={18} />
+                <span className="text-[9px] font-medium leading-tight">{item.label.split(' ')[0]}</span>
               </Link>
             );
           })}
           <Link
             href="/settings"
             className={cn(
-              'flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] rounded-xl transition-colors',
+              'flex flex-col items-center justify-center gap-0.5 min-w-[40px] min-h-[40px] rounded-xl transition-colors',
               pathname === '/settings' ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'
             )}
           >
-            <Settings size={20} />
-            <span className="text-[10px] font-medium">More</span>
+            <Settings size={18} />
+            <span className="text-[9px] font-medium leading-tight">More</span>
           </Link>
         </div>
       </nav>
