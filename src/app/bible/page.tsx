@@ -75,8 +75,11 @@ interface LastRead {
   translation: string;
 }
 
+// Bump this version to invalidate all cached entries (e.g. after fixing HTML stripping)
+const CACHE_VERSION = 2;
+
 function getCacheKey(book: string, chapter: number, translation: string): string {
-  return `dw-bible-${translation}-${book}-${chapter}`;
+  return `dw-bible-v${CACHE_VERSION}-${translation}-${book}-${chapter}`;
 }
 
 /** Strip HTML tags and section headings from bolls.life verse text */
@@ -84,8 +87,8 @@ function stripHtml(html: string): string {
   return html
     // Remove section headings (h1-h6) and their content entirely
     .replace(/<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi, '')
-    // Remove paragraph/div wrappers for headings (class="s1","s","d","qa" etc.)
-    .replace(/<p[^>]*class="[^"]*(?:heading|title|s1|s2|ms|mr|d\b|qa|qc|mt)[^"]*"[^>]*>[\s\S]*?<\/p>/gi, '')
+    // Remove USFM heading elements: any tag with class containing s, s1, s2, r, d, ms, mr, mt, qa, qc
+    .replace(/<[a-z]+[^>]*\bclass="[^"]*\b(?:s\d*|r|d|ms\d*|mr|mt\d*|qa|qc|heading|title)\b[^"]*"[^>]*>[\s\S]*?<\/[a-z]+>/gi, '')
     // Replace line breaks with space
     .replace(/<br\s*\/?>/gi, ' ')
     // Remove all remaining HTML tags
