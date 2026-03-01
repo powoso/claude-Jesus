@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft, ChevronRight, Share2, Home,
-  BookOpen, Flame, BookHeart
+  BookOpen, Flame, BookHeart, Calendar
 } from 'lucide-react';
 import { AppLayout } from '@/components/navigation/AppLayout';
 import { Card } from '@/components/ui/Card';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useApp } from '@/contexts/AppContext';
 import { useToast } from '@/components/ui/Toast';
+import { CalendarPicker } from '@/components/ui/CalendarPicker';
 import { dailyVerses, devotionalReflections } from '@/data/verses';
 import { getDayOfYear, formatDate, copyToClipboard, getStreakCount } from '@/lib/utils';
 
@@ -20,6 +21,7 @@ export default function DevotionalPage() {
   const { showToast } = useToast();
   const today = new Date();
   const [dayOffset, setDayOffset] = useState(0);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const currentDate = useMemo(() => {
     const d = new Date(today);
@@ -136,19 +138,26 @@ export default function DevotionalPage() {
           Previous
         </Button>
 
-        <div className="text-center">
-          <p className="text-sm font-medium text-[var(--text-primary)]">
-            {formatDate(currentDate)}
-          </p>
+        <button
+          onClick={() => setCalendarOpen(true)}
+          className="text-center group cursor-pointer"
+          aria-label="Open calendar"
+        >
+          <div className="flex items-center gap-1.5 justify-center">
+            <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+              {formatDate(currentDate)}
+            </p>
+            <Calendar size={14} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors" />
+          </div>
           {!isToday && (
-            <button
-              onClick={() => setDayOffset(0)}
-              className="text-xs text-[var(--accent)] hover:underline mt-0.5"
+            <span
+              onClick={(e) => { e.stopPropagation(); setDayOffset(0); }}
+              className="text-xs text-[var(--accent)] hover:underline mt-0.5 inline-block"
             >
               Return to today
-            </button>
+            </span>
           )}
-        </div>
+        </button>
 
         <Button
           variant="ghost"
@@ -232,6 +241,18 @@ export default function DevotionalPage() {
           </div>
         </motion.div>
       </AnimatePresence>
+
+      <CalendarPicker
+        isOpen={calendarOpen}
+        onClose={() => setCalendarOpen(false)}
+        selectedDate={currentDate}
+        maxDate={today}
+        onSelectDate={(date) => {
+          const diffTime = date.getTime() - today.getTime();
+          const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+          setDayOffset(diffDays);
+        }}
+      />
     </AppLayout>
   );
 }
