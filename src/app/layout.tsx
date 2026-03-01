@@ -72,6 +72,9 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: ['/icon-512.png'],
   },
+  verification: {
+    google: 'M3A5IZgDdDT3DhwS3seCJjlDUAwmuKXqQO0i01q-7uM',
+  },
   robots: {
     index: true,
     follow: true,
