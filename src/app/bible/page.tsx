@@ -30,17 +30,27 @@ import {
   OT_CATEGORIES,
   NT_CATEGORIES,
   getBookByName,
+  getBookNumber,
   getNextChapter,
   getPrevChapter,
 } from '@/data/bible-structure';
 
-const TRANSLATIONS: { value: string; label: string; short: string }[] = [
-  { value: 'web', label: 'World English Bible', short: 'WEB' },
-  { value: 'kjv', label: 'King James Version', short: 'KJV' },
-  { value: 'bbe', label: 'Bible in Basic English', short: 'BBE' },
-  { value: 'oeb-us', label: 'Open English Bible', short: 'OEB' },
-  { value: 'clementine', label: 'Latin Vulgate', short: 'Vulgate' },
-  { value: 'almeida', label: 'Almeida (Portuguese)', short: 'Almeida' },
+type BibleApi = 'bible-api' | 'bolls';
+
+const TRANSLATIONS: { value: string; label: string; short: string; api: BibleApi }[] = [
+  // bolls.life translations (includes popular copyrighted versions)
+  { value: 'NIV', label: 'New International Version', short: 'NIV', api: 'bolls' },
+  { value: 'ESV', label: 'English Standard Version', short: 'ESV', api: 'bolls' },
+  { value: 'NKJV', label: 'New King James Version', short: 'NKJV', api: 'bolls' },
+  { value: 'NLT', label: 'New Living Translation', short: 'NLT', api: 'bolls' },
+  { value: 'NASB', label: 'New American Standard Bible', short: 'NASB', api: 'bolls' },
+  // bible-api.com translations (public domain)
+  { value: 'web', label: 'World English Bible', short: 'WEB', api: 'bible-api' },
+  { value: 'kjv', label: 'King James Version', short: 'KJV', api: 'bible-api' },
+  { value: 'bbe', label: 'Bible in Basic English', short: 'BBE', api: 'bible-api' },
+  { value: 'oeb-us', label: 'Open English Bible', short: 'OEB', api: 'bible-api' },
+  { value: 'clementine', label: 'Latin Vulgate', short: 'Vulgate', api: 'bible-api' },
+  { value: 'almeida', label: 'Almeida (Portuguese)', short: 'Almeida', api: 'bible-api' },
 ];
 
 interface VerseData {
@@ -70,12 +80,12 @@ function getCacheKey(book: string, chapter: number, translation: string): string
 }
 
 function getLastRead(): LastRead {
-  if (typeof window === 'undefined') return { book: 'Genesis', chapter: 1, translation: 'web' };
+  if (typeof window === 'undefined') return { book: 'Genesis', chapter: 1, translation: 'NIV' };
   try {
     const saved = localStorage.getItem('dw-bible-last-read');
     if (saved) return JSON.parse(saved);
   } catch { /* ignore */ }
-  return { book: 'Genesis', chapter: 1, translation: 'web' };
+  return { book: 'Genesis', chapter: 1, translation: 'NIV' };
 }
 
 function saveLastRead(lastRead: LastRead): void {
@@ -155,20 +165,48 @@ export default function BiblePage() {
     setError(null);
 
     try {
-      const ref = `${book} ${chapter}`;
-      const url = `https://bible-api.com/${encodeURIComponent(ref)}?translation=${trans}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Chapter not found');
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      const translationDef = TRANSLATIONS.find(t => t.value === trans);
+      let chapterResult: ChapterData;
 
-      const chapterResult: ChapterData = {
-        reference: data.reference,
-        verses: data.verses || [],
-        text: data.text?.trim() || '',
-        translation_id: trans,
-        translation_name: TRANSLATIONS.find(t => t.value === trans)?.label || trans,
-      };
+      if (translationDef?.api === 'bolls') {
+        // Use bolls.life API for NIV, ESV, NASB, NLT, NKJV
+        const bookNum = getBookNumber(book);
+        const url = `https://bolls.life/get-text/${trans}/${bookNum}/${chapter}/`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Chapter not found');
+        const data: { verse: number; text: string }[] = await res.json();
+        if (!Array.isArray(data) || data.length === 0) throw new Error('No verses found');
+
+        chapterResult = {
+          reference: `${book} ${chapter}`,
+          verses: data.map(v => ({
+            book_id: '',
+            book_name: book,
+            chapter,
+            verse: v.verse,
+            text: v.text,
+          })),
+          text: data.map(v => v.text.trim()).join(' '),
+          translation_id: trans,
+          translation_name: translationDef.label,
+        };
+      } else {
+        // Use bible-api.com for public domain translations
+        const ref = `${book} ${chapter}`;
+        const url = `https://bible-api.com/${encodeURIComponent(ref)}?translation=${trans}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Chapter not found');
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        chapterResult = {
+          reference: data.reference,
+          verses: data.verses || [],
+          text: data.text?.trim() || '',
+          translation_id: trans,
+          translation_name: TRANSLATIONS.find(t => t.value === trans)?.label || trans,
+        };
+      }
 
       // Cache in localStorage
       try {

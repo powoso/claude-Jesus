@@ -103,6 +103,12 @@ export function getBookByName(name: string): BibleBook | undefined {
   return bibleBooks.find(b => b.name === name);
 }
 
+/** Returns the 1-based book number (Genesis=1 … Revelation=66) used by bolls.life API */
+export function getBookNumber(name: string): number {
+  const idx = bibleBooks.findIndex(b => b.name === name);
+  return idx === -1 ? 1 : idx + 1;
+}
+
 export function getNextChapter(bookName: string, chapter: number): { book: string; chapter: number } | null {
   const book = getBookByName(bookName);
   if (!book) return null;
