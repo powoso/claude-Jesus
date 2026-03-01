@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Heart, BookOpen, ArrowLeft } from 'lucide-react';
+import { Heart, BookOpen, ArrowLeft, DollarSign, ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 import { AppLayout } from '@/components/navigation/AppLayout';
 import { Card } from '@/components/ui/Card';
@@ -80,6 +80,51 @@ export default function AboutPage() {
               </motion.li>
             ))}
           </ul>
+        </Card>
+
+        <Card>
+          <h3 className="font-heading text-lg font-semibold text-[var(--text-primary)] mb-3">Support This Ministry</h3>
+          <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-5">
+            Daily Walk is free and always will be. If this app has blessed your walk with Christ and you&apos;d like
+            to support its continued development, your generosity is deeply appreciated. Every gift helps keep
+            this ministry running and ad-free.
+          </p>
+          <div className="space-y-3">
+            <a
+              href="https://www.paypal.com/paypalme/powoso"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 p-4 rounded-xl bg-[#0070BA]/10 border border-[#0070BA]/20 hover:bg-[#0070BA]/15 transition-all duration-200 group"
+            >
+              <div className="w-10 h-10 rounded-full bg-[#0070BA] flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-bold text-sm">PP</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-[var(--text-primary)]">PayPal</p>
+                <p className="text-xs text-[var(--text-muted)]">powoso@gmail.com</p>
+              </div>
+              <ExternalLink size={16} className="text-[var(--text-muted)] group-hover:text-[#0070BA] transition-colors flex-shrink-0" />
+            </a>
+            <a
+              href="https://cash.app/$PaulC111"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 p-4 rounded-xl bg-[#00D632]/10 border border-[#00D632]/20 hover:bg-[#00D632]/15 transition-all duration-200 group"
+            >
+              <div className="w-10 h-10 rounded-full bg-[#00D632] flex items-center justify-center flex-shrink-0">
+                <DollarSign size={20} className="text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-[var(--text-primary)]">Cash App</p>
+                <p className="text-xs text-[var(--text-muted)]">$PaulC111</p>
+              </div>
+              <ExternalLink size={16} className="text-[var(--text-muted)] group-hover:text-[#00D632] transition-colors flex-shrink-0" />
+            </a>
+          </div>
+          <p className="text-xs text-center text-[var(--text-muted)] mt-4 font-scripture">
+            &ldquo;Each of you should give what you have decided in your heart to give, not reluctantly or under
+            compulsion, for God loves a cheerful giver.&rdquo; — 2 Corinthians 9:7
+          </p>
         </Card>
 
         <Card>
