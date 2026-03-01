@@ -91,7 +91,7 @@ export default function AboutPage() {
           </p>
           <div className="space-y-3">
             <a
-              href="https://www.paypal.com/paypalme/powoso"
+              href="https://www.paypal.com/paypalme/PaulChung11111"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 p-4 rounded-xl bg-[#0070BA]/10 border border-[#0070BA]/20 hover:bg-[#0070BA]/15 transition-all duration-200 group"
@@ -101,7 +101,7 @@ export default function AboutPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-[var(--text-primary)]">PayPal</p>
-                <p className="text-xs text-[var(--text-muted)]">powoso@gmail.com</p>
+                <p className="text-xs text-[var(--text-muted)]">@PaulChung11111</p>
               </div>
               <ExternalLink size={16} className="text-[var(--text-muted)] group-hover:text-[#0070BA] transition-colors flex-shrink-0" />
             </a>
