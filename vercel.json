@@ -35,19 +35,5 @@
         { "key": "Cache-Control", "value": "public, max-age=86400" }
       ]
     }
-  ],
-  "redirects": [
-    {
-      "source": "/(.*)",
-      "has": [{ "type": "host", "value": "www.daily-walk.com" }],
-      "destination": "https://daily-walk.com/$1",
-      "permanent": true
-    },
-    {
-      "source": "/(.*)",
-      "has": [{ "type": "host", "value": "www.daily-walk.app" }],
-      "destination": "https://daily-walk.app/$1",
-      "permanent": true
-    }
   ]
 }
