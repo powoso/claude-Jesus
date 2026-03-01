@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Modal } from './Modal';
+import { useTranslation } from '@/lib/i18n';
 
 interface CalendarPickerProps {
   isOpen: boolean;
@@ -13,12 +14,6 @@ interface CalendarPickerProps {
   maxDate?: Date;
 }
 
-const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
-
 function isSameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
@@ -26,6 +21,9 @@ function isSameDay(a: Date, b: Date) {
 }
 
 export function CalendarPicker({ isOpen, onClose, selectedDate, onSelectDate, maxDate }: CalendarPickerProps) {
+  const { t } = useTranslation();
+  const c = t.calendar;
+
   const [viewYear, setViewYear] = useState(selectedDate.getFullYear());
   const [viewMonth, setViewMonth] = useState(selectedDate.getMonth());
 
@@ -95,23 +93,23 @@ export function CalendarPicker({ isOpen, onClose, selectedDate, onSelectDate, ma
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Go to Date">
+    <Modal isOpen={isOpen} onClose={onClose} title={c.goToDate}>
       {/* Month/Year Navigation */}
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={goToPrevMonth}
           className="p-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
-          aria-label="Previous month"
+          aria-label={c.previousMonth}
         >
           <ChevronLeft size={20} className="text-[var(--text-secondary)]" />
         </button>
         <h3 className="text-base font-semibold text-[var(--text-primary)]">
-          {MONTHS[viewMonth]} {viewYear}
+          {c.months[viewMonth]} {viewYear}
         </h3>
         <button
           onClick={goToNextMonth}
           className="p-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
-          aria-label="Next month"
+          aria-label={c.nextMonth}
         >
           <ChevronRight size={20} className="text-[var(--text-secondary)]" />
         </button>
@@ -119,7 +117,7 @@ export function CalendarPicker({ isOpen, onClose, selectedDate, onSelectDate, ma
 
       {/* Day Headers */}
       <div className="grid grid-cols-7 mb-2">
-        {DAYS_OF_WEEK.map(day => (
+        {c.days.map(day => (
           <div key={day} className="text-center text-xs font-medium text-[var(--text-muted)] py-1">
             {day}
           </div>
@@ -162,7 +160,7 @@ export function CalendarPicker({ isOpen, onClose, selectedDate, onSelectDate, ma
           onClick={() => handleSelect(today)}
           className="text-sm font-medium text-[var(--accent)] hover:underline"
         >
-          Go to Today
+          {c.goToToday}
         </button>
       </div>
     </Modal>

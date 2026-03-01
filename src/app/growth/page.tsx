@@ -17,18 +17,13 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { useApp } from '@/contexts/AppContext';
 import { useToast } from '@/components/ui/Toast';
 import { getWeekNumber, getEncouragementMessage } from '@/lib/utils';
-
-const categories = [
-  { key: 'prayerLife', label: 'Prayer Life' },
-  { key: 'scriptureReading', label: 'Scripture Reading' },
-  { key: 'worship', label: 'Worship' },
-  { key: 'service', label: 'Service' },
-  { key: 'fellowship', label: 'Fellowship' },
-] as const;
+import { useTranslation, getLocale } from '@/lib/i18n';
 
 export default function GrowthPage() {
   const { weeklyCheckIns, addWeeklyCheckIn } = useApp();
   const { showToast } = useToast();
+  const { t, lang } = useTranslation();
+  const gr = t.growth;
   const [showAddModal, setShowAddModal] = useState(false);
   const [ratings, setRatings] = useState({
     prayerLife: 3,
@@ -37,6 +32,14 @@ export default function GrowthPage() {
     service: 3,
     fellowship: 3,
   });
+
+  const categories = [
+    { key: 'prayerLife', label: gr.prayerLife },
+    { key: 'scriptureReading', label: gr.scriptureReading },
+    { key: 'worship', label: gr.worship },
+    { key: 'service', label: gr.service },
+    { key: 'fellowship', label: gr.fellowship },
+  ] as const;
 
   // Chart data
   const chartData = useMemo(() => {
@@ -58,7 +61,8 @@ export default function GrowthPage() {
       category: cat.label,
       value: latest.ratings[cat.key],
     }));
-  }, [weeklyCheckIns]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weeklyCheckIns, gr]);
 
   // Trend analysis
   const trend = useMemo((): 'up' | 'down' | 'stable' => {
@@ -87,7 +91,7 @@ export default function GrowthPage() {
     });
     setRatings({ prayerLife: 3, scriptureReading: 3, worship: 3, service: 3, fellowship: 3 });
     setShowAddModal(false);
-    showToast('Weekly check-in saved');
+    showToast(gr.checkInSaved);
   };
 
   // Monthly summary
@@ -103,18 +107,21 @@ export default function GrowthPage() {
       avg: Number((thisMonth.reduce((sum, c) => sum + c.ratings[cat.key], 0) / thisMonth.length).toFixed(1)),
     }));
     return { checkIns: thisMonth.length, averages: avg };
-  }, [weeklyCheckIns]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weeklyCheckIns, gr]);
+
+  const locale = getLocale(lang);
 
   return (
     <AppLayout>
       <PageHeader
-        title="Spiritual Growth"
-        subtitle="But grow in the grace and knowledge of our Lord."
+        title={gr.title}
+        subtitle={gr.subtitle}
         icon={<TrendingUp size={28} />}
         action={
           <Button onClick={() => setShowAddModal(true)}>
             <Plus size={16} />
-            Weekly Check-In
+            {gr.weeklyCheckIn}
           </Button>
         }
       />
@@ -122,16 +129,16 @@ export default function GrowthPage() {
       {weeklyCheckIns.length === 0 ? (
         <EmptyState
           icon={<TrendingUp size={48} />}
-          title="Start tracking your growth"
-          description="Complete your first weekly check-in to begin seeing your spiritual growth journey."
+          title={gr.emptyTitle}
+          description={gr.emptyDesc}
           scripture={{
-            text: 'Being confident of this, that he who began a good work in you will carry it on to completion until the day of Christ Jesus.',
-            reference: 'Philippians 1:6',
+            text: gr.emptyScripture,
+            reference: gr.emptyScriptureRef,
           }}
           action={
             <Button onClick={() => setShowAddModal(true)}>
               <Plus size={16} />
-              First Check-In
+              {gr.firstCheckIn}
             </Button>
           }
         />
@@ -149,7 +156,7 @@ export default function GrowthPage() {
             {/* Line Chart */}
             <Card>
               <h3 className="font-heading font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
-                <BarChart2 size={18} /> Growth Trends
+                <BarChart2 size={18} /> {gr.growthTrends}
               </h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
@@ -165,9 +172,9 @@ export default function GrowthPage() {
                         fontSize: '12px',
                       }}
                     />
-                    <Line type="monotone" dataKey="average" stroke="var(--accent)" strokeWidth={2} dot={{ r: 4 }} name="Average" />
-                    <Line type="monotone" dataKey="prayerLife" stroke="#7C9070" strokeWidth={1} strokeDasharray="4 4" dot={false} name="Prayer" />
-                    <Line type="monotone" dataKey="scriptureReading" stroke="#C9A84C" strokeWidth={1} strokeDasharray="4 4" dot={false} name="Scripture" />
+                    <Line type="monotone" dataKey="average" stroke="var(--accent)" strokeWidth={2} dot={{ r: 4 }} name={gr.average} />
+                    <Line type="monotone" dataKey="prayerLife" stroke="#7C9070" strokeWidth={1} strokeDasharray="4 4" dot={false} name={gr.chartPrayer} />
+                    <Line type="monotone" dataKey="scriptureReading" stroke="#C9A84C" strokeWidth={1} strokeDasharray="4 4" dot={false} name={gr.chartScripture} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -175,7 +182,7 @@ export default function GrowthPage() {
 
             {/* Radar Chart */}
             <Card>
-              <h3 className="font-heading font-semibold text-[var(--text-primary)] mb-4">Latest Check-In</h3>
+              <h3 className="font-heading font-semibold text-[var(--text-primary)] mb-4">{gr.latestCheckIn}</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={radarData}>
@@ -193,10 +200,10 @@ export default function GrowthPage() {
           {monthlySummary && (
             <Card>
               <h3 className="font-heading font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
-                <Calendar size={18} /> This Month&apos;s Summary
+                <Calendar size={18} /> {gr.monthSummary}
               </h3>
               <p className="text-sm text-[var(--text-muted)] mb-4">
-                {monthlySummary.checkIns} check-in{monthlySummary.checkIns !== 1 ? 's' : ''} this month
+                {gr.checkInCount.replace('{count}', String(monthlySummary.checkIns))}
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                 {monthlySummary.averages.map(item => (
@@ -211,7 +218,7 @@ export default function GrowthPage() {
 
           {/* History */}
           <Card>
-            <h3 className="font-heading font-semibold text-[var(--text-primary)] mb-4">Check-In History</h3>
+            <h3 className="font-heading font-semibold text-[var(--text-primary)] mb-4">{gr.checkInHistory}</h3>
             <div className="space-y-3">
               {weeklyCheckIns.slice(0, 10).map((checkIn, i) => {
                 const avg = (Object.values(checkIn.ratings).reduce((a, b) => a + b, 0) / 5).toFixed(1);
@@ -224,9 +231,9 @@ export default function GrowthPage() {
                     className="flex items-center justify-between py-2 border-b border-[var(--border-color)] last:border-0"
                   >
                     <div>
-                      <span className="text-sm text-[var(--text-primary)]">Week {checkIn.weekNumber}, {checkIn.year}</span>
+                      <span className="text-sm text-[var(--text-primary)]">{gr.weekLabel.replace('{week}', String(checkIn.weekNumber)).replace('{year}', String(checkIn.year))}</span>
                       <span className="text-xs text-[var(--text-muted)] ml-2">
-                        {new Date(checkIn.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        {new Date(checkIn.date).toLocaleDateString(locale, { month: 'short', day: 'numeric' })}
                       </span>
                     </div>
                     <span className="text-sm font-semibold text-[var(--accent)]">{avg}/5</span>
@@ -239,10 +246,10 @@ export default function GrowthPage() {
       )}
 
       {/* Check-In Modal */}
-      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Weekly Check-In">
+      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title={gr.weeklyCheckIn}>
         <div className="space-y-5">
           <p className="text-sm text-[var(--text-muted)]">
-            Reflect on your week. Rate each area from 1 to 5 — be honest and gentle with yourself.
+            {gr.reflectIntro}
           </p>
           {categories.map(cat => (
             <div key={cat.key}>
@@ -265,19 +272,19 @@ export default function GrowthPage() {
                   </button>
                 ))}
                 <span className="text-xs text-[var(--text-muted)] ml-2">
-                  {ratings[cat.key] === 1 ? 'Needs growth' :
-                   ratings[cat.key] === 2 ? 'Developing' :
-                   ratings[cat.key] === 3 ? 'Steady' :
-                   ratings[cat.key] === 4 ? 'Strong' : 'Thriving'}
+                  {ratings[cat.key] === 1 ? gr.needsGrowth :
+                   ratings[cat.key] === 2 ? gr.developing :
+                   ratings[cat.key] === 3 ? gr.steady :
+                   ratings[cat.key] === 4 ? gr.strong : gr.thriving}
                 </span>
               </div>
             </div>
           ))}
           <Button onClick={handleSubmitCheckIn} className="w-full">
-            Submit Check-In
+            {gr.submitCheckIn}
           </Button>
           <p className="font-scripture text-xs text-center text-[var(--text-muted)]">
-            &ldquo;He who began a good work in you will carry it on to completion.&rdquo; — Philippians 1:6
+            &ldquo;{gr.footerVerse}&rdquo; {gr.footerRef}
           </p>
         </div>
       </Modal>

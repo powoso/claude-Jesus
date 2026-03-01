@@ -15,18 +15,21 @@ import { useToast } from '@/components/ui/Toast';
 import { CalendarPicker } from '@/components/ui/CalendarPicker';
 import { dailyVerses, devotionalReflections } from '@/data/verses';
 import { getDayOfYear, formatDate, copyToClipboard, getStreakCount } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 export default function DevotionalPage() {
   const { prayerDates, readingProgress, visitDates, recordVisit } = useApp();
   const { showToast } = useToast();
+  const { t } = useTranslation();
+  const d = t.devotional;
   const today = new Date();
   const [dayOffset, setDayOffset] = useState(0);
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   const currentDate = useMemo(() => {
-    const d = new Date(today);
-    d.setDate(d.getDate() + dayOffset);
-    return d;
+    const dt = new Date(today);
+    dt.setDate(dt.getDate() + dayOffset);
+    return dt;
   }, [dayOffset]);
 
   const dayOfYear = getDayOfYear(currentDate);
@@ -34,9 +37,9 @@ export default function DevotionalPage() {
   const verse = dailyVerses[verseIndex];
   const questions = devotionalReflections[verse.theme] || devotionalReflections['Faith'];
   const handleShare = async () => {
-    const text = `"${verse.text}" — ${verse.reference}\n\nFrom Daily Walk Devotional`;
+    const text = `"${verse.text}" — ${verse.reference}\n\n${d.shareText}`;
     await copyToClipboard(text);
-    showToast('Verse copied to clipboard!');
+    showToast(d.verseCopied);
   };
 
   // Record today's visit
@@ -61,15 +64,15 @@ export default function DevotionalPage() {
   const isMilestone = walkStreak > 0 && (walkStreak % 7 === 0 || walkStreak === 1);
 
   const streaks = [
-    { icon: <BookHeart size={16} />, label: 'Prayer', count: prayerStreak },
-    { icon: <BookOpen size={16} />, label: 'Reading', count: readingStreak },
+    { icon: <BookHeart size={16} />, label: d.prayer, count: prayerStreak },
+    { icon: <BookOpen size={16} />, label: d.reading, count: readingStreak },
   ];
 
   return (
     <AppLayout>
       <PageHeader
-        title="Daily Devotional"
-        subtitle="Draw near to God, and He will draw near to you."
+        title={d.title}
+        subtitle={d.subtitle}
         icon={<Home size={28} />}
       />
 
@@ -91,9 +94,9 @@ export default function DevotionalPage() {
                   <Flame size={20} className="text-amber-500" />
                 </motion.div>
                 <div>
-                  <h3 className="text-sm font-semibold text-[var(--text-primary)]">Daily Walk Streak</h3>
+                  <h3 className="text-sm font-semibold text-[var(--text-primary)]">{d.streakTitle}</h3>
                   <p className="text-xs text-[var(--text-muted)]">
-                    {walkStreak === 0 ? 'Start your streak today!' : walkStreak === 1 ? 'Great start! Come back tomorrow.' : `${walkStreak} days in a row!`}
+                    {walkStreak === 0 ? d.streakStart : walkStreak === 1 ? d.streakOne : d.streakMany.replace('{count}', String(walkStreak))}
                   </p>
                 </div>
               </div>
@@ -131,17 +134,17 @@ export default function DevotionalPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setDayOffset(d => d - 1)}
-          aria-label="Previous day"
+          onClick={() => setDayOffset(prev => prev - 1)}
+          aria-label={d.previousDay}
         >
           <ChevronLeft size={18} />
-          Previous
+          {t.common.previous}
         </Button>
 
         <button
           onClick={() => setCalendarOpen(true)}
           className="text-center group cursor-pointer"
-          aria-label="Open calendar"
+          aria-label={d.openCalendar}
         >
           <div className="flex items-center gap-1.5 justify-center">
             <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
@@ -154,7 +157,7 @@ export default function DevotionalPage() {
               onClick={(e) => { e.stopPropagation(); setDayOffset(0); }}
               className="text-xs text-[var(--accent)] hover:underline mt-0.5 inline-block"
             >
-              Return to today
+              {d.returnToday}
             </span>
           )}
         </button>
@@ -162,11 +165,11 @@ export default function DevotionalPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setDayOffset(d => d + 1)}
+          onClick={() => setDayOffset(prev => prev + 1)}
           disabled={isToday}
-          aria-label="Next day"
+          aria-label={d.nextDay}
         >
-          Next
+          {t.common.next}
           <ChevronRight size={18} />
         </Button>
       </div>
@@ -199,10 +202,10 @@ export default function DevotionalPage() {
                 variant="secondary"
                 size="sm"
                 onClick={handleShare}
-                aria-label="Copy verse to clipboard"
+                aria-label={d.copyVerse}
               >
                 <Share2 size={16} />
-                Share This Verse
+                {d.shareVerse}
               </Button>
             </div>
           </Card>
@@ -210,7 +213,7 @@ export default function DevotionalPage() {
           {/* Reflection Card */}
           <Card>
             <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)] mb-5">
-              Reflect & Respond
+              {d.reflectTitle}
             </h2>
             <div className="space-y-4">
               {questions.map((question, i) => (
@@ -235,8 +238,8 @@ export default function DevotionalPage() {
           {/* Encouragement */}
           <div className="text-center py-4">
             <p className="font-scripture text-sm text-[var(--text-muted)]">
-              &ldquo;Your word is a lamp for my feet, a light on my path.&rdquo;
-              <span className="block mt-1 not-italic text-xs">— Psalm 119:105</span>
+              &ldquo;{d.footerVerse}&rdquo;
+              <span className="block mt-1 not-italic text-xs">{d.footerRef}</span>
             </p>
           </div>
         </motion.div>

@@ -20,6 +20,7 @@ import { useApp } from '@/contexts/AppContext';
 import { useToast } from '@/components/ui/Toast';
 import { PrayerCategory } from '@/lib/types';
 import { formatShortDate, getStreakCount } from '@/lib/utils';
+import { useTranslation, getLocale } from '@/lib/i18n';
 
 const categories: PrayerCategory[] = ['Gratitude', 'Intercession', 'Confession', 'Petition', 'Praise', 'Healing', 'Guidance'];
 
@@ -36,6 +37,19 @@ const categoryColors: Record<string, string> = {
 export default function PrayerPage() {
   const { prayers, addPrayer, updatePrayer, deletePrayer, prayerDates } = useApp();
   const { showToast } = useToast();
+  const { t, lang } = useTranslation();
+  const p = t.prayer;
+
+  const categoryLabels: Record<string, string> = {
+    Gratitude: p.catGratitude,
+    Intercession: p.catIntercession,
+    Confession: p.catConfession,
+    Petition: p.catPetition,
+    Praise: p.catPraise,
+    Healing: p.catHealing,
+    Guidance: p.catGuidance,
+  };
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAnswerModal, setShowAnswerModal] = useState<string | null>(null);
   const [editingPrayer, setEditingPrayer] = useState<string | null>(null);
@@ -57,19 +71,19 @@ export default function PrayerPage() {
   const streak = getStreakCount(prayerDates);
 
   const filteredPrayers = useMemo(() => {
-    return prayers.filter(p => {
-      if (view === 'active' && p.isAnswered) return false;
-      if (view === 'answered' && !p.isAnswered) return false;
-      if (filterCategory !== 'all' && p.category !== filterCategory) return false;
+    return prayers.filter(pr => {
+      if (view === 'active' && pr.isAnswered) return false;
+      if (view === 'answered' && !pr.isAnswered) return false;
+      if (filterCategory !== 'all' && pr.category !== filterCategory) return false;
       if (filterDate) {
-        const prayerDate = new Date(p.date);
+        const prayerDate = new Date(pr.date);
         if (prayerDate.getFullYear() !== filterDate.getFullYear() ||
           prayerDate.getMonth() !== filterDate.getMonth() ||
           prayerDate.getDate() !== filterDate.getDate()) return false;
       }
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
-        return p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q);
+        return pr.title.toLowerCase().includes(q) || pr.description.toLowerCase().includes(q);
       }
       return true;
     });
@@ -87,7 +101,7 @@ export default function PrayerPage() {
     setNewDescription('');
     setNewCategory('Petition');
     setShowAddModal(false);
-    showToast('Prayer added');
+    showToast(p.prayerAdded);
   };
 
   const handleMarkAnswered = (id: string) => {
@@ -98,7 +112,7 @@ export default function PrayerPage() {
     });
     setTestimonyNotes('');
     setShowAnswerModal(null);
-    showToast('Praise God! Prayer marked as answered');
+    showToast(p.prayerMarkedAnswered);
   };
 
   const openEditModal = (prayer: typeof prayers[0]) => {
@@ -116,21 +130,21 @@ export default function PrayerPage() {
       category: editCategory,
     });
     setEditingPrayer(null);
-    showToast('Prayer updated');
+    showToast(p.prayerUpdated);
   };
 
   return (
     <AppLayout>
       <PageHeader
-        title="Prayer Journal"
-        subtitle="Cast all your anxiety on Him because He cares for you."
+        title={p.title}
+        subtitle={p.subtitle}
         icon={<BookHeart size={28} />}
         action={
           <div className="flex items-center gap-3">
             <StreakBadge count={streak} />
             <Button onClick={() => setShowAddModal(true)}>
               <Plus size={16} />
-              New Prayer
+              {p.newPrayer}
             </Button>
           </div>
         }
@@ -146,7 +160,7 @@ export default function PrayerPage() {
               : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)]'
           }`}
         >
-          Active Prayers
+          {p.activePrayers}
         </button>
         <button
           onClick={() => setView('answered')}
@@ -156,7 +170,7 @@ export default function PrayerPage() {
               : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)]'
           }`}
         >
-          Answered Prayers
+          {p.answeredPrayers}
         </button>
       </div>
 
@@ -167,11 +181,11 @@ export default function PrayerPage() {
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
             <input
               type="text"
-              placeholder="Search prayers..."
+              placeholder={p.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-              aria-label="Search prayers"
+              aria-label={p.searchPlaceholder}
             />
           </div>
           <button
@@ -181,29 +195,29 @@ export default function PrayerPage() {
                 ? 'bg-[var(--accent)]/10 border-[var(--accent)]/30 text-[var(--accent)]'
                 : 'bg-[var(--bg-secondary)] border-[var(--border-color)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
-            aria-label="Filter by date"
+            aria-label={p.filterByDate}
           >
             <Calendar size={16} />
           </button>
         </div>
         <Select
-          options={[{ value: 'all', label: 'All Categories' }, ...categories.map(c => ({ value: c, label: c }))]}
+          options={[{ value: 'all', label: t.common.allCategories }, ...categories.map(c => ({ value: c, label: categoryLabels[c] || c }))]}
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
           className="sm:w-48"
-          aria-label="Filter by category"
+          aria-label={t.common.allCategories}
         />
       </div>
       {filterDate && (
         <div className="flex items-center gap-2 mb-6">
           <span className="text-xs text-[var(--text-muted)]">
-            Showing prayers from {filterDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            {p.showingPrayersFrom.replace('{date}', filterDate.toLocaleDateString(getLocale(lang), { month: 'long', day: 'numeric', year: 'numeric' }))}
           </span>
           <button
             onClick={() => setFilterDate(null)}
             className="text-xs text-[var(--accent)] hover:underline"
           >
-            Show all
+            {t.common.showAll}
           </button>
         </div>
       )}
@@ -220,16 +234,16 @@ export default function PrayerPage() {
       {filteredPrayers.length === 0 ? (
         <EmptyState
           icon={<BookHeart size={48} />}
-          title={view === 'active' ? 'No active prayers yet' : 'No answered prayers yet'}
-          description={view === 'active' ? 'Start your prayer journey by adding your first prayer request.' : 'When God answers, mark your prayers as answered to see them here.'}
+          title={view === 'active' ? p.noActive : p.noAnswered}
+          description={view === 'active' ? p.noActiveDesc : p.noAnsweredDesc}
           scripture={{
-            text: 'Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God.',
-            reference: 'Philippians 4:6',
+            text: p.emptyScripture,
+            reference: p.emptyScriptureRef,
           }}
           action={view === 'active' ? (
             <Button onClick={() => setShowAddModal(true)}>
               <Plus size={16} />
-              Add First Prayer
+              {p.addFirst}
             </Button>
           ) : undefined}
         />
@@ -255,13 +269,13 @@ export default function PrayerPage() {
                   <p className="text-sm text-[var(--text-secondary)] mb-3">{prayer.description}</p>
                   {prayer.testimonyNotes && (
                     <div className="bg-[var(--bg-secondary)] rounded-lg p-3 mb-3">
-                      <p className="text-xs font-medium text-[var(--accent)] mb-1">Testimony</p>
+                      <p className="text-xs font-medium text-[var(--accent)] mb-1">{p.testimony}</p>
                       <p className="text-sm text-[var(--text-secondary)]">{prayer.testimonyNotes}</p>
                     </div>
                   )}
                   <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
-                    <span className="flex items-center gap-1"><Calendar size={12} /> Prayed: {formatShortDate(prayer.date)}</span>
-                    <span className="flex items-center gap-1"><Check size={12} /> Answered: {prayer.answeredDate ? formatShortDate(prayer.answeredDate) : 'N/A'}</span>
+                    <span className="flex items-center gap-1"><Calendar size={12} /> {p.prayed} {formatShortDate(prayer.date)}</span>
+                    <span className="flex items-center gap-1"><Check size={12} /> {p.answered} {prayer.answeredDate ? formatShortDate(prayer.answeredDate) : p.na}</span>
                   </div>
                 </Card>
               </motion.div>
@@ -282,7 +296,7 @@ export default function PrayerPage() {
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <h3 className="font-heading font-semibold text-[var(--text-primary)]">{prayer.title}</h3>
                   <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${categoryColors[prayer.category]}`}>
-                    {prayer.category}
+                    {categoryLabels[prayer.category] || prayer.category}
                   </span>
                 </div>
                 <p className="text-sm text-[var(--text-secondary)] mb-4 line-clamp-3">{prayer.description}</p>
@@ -294,7 +308,7 @@ export default function PrayerPage() {
                     <button
                       onClick={() => openEditModal(prayer)}
                       className="p-1.5 rounded-lg hover:bg-[var(--bg-secondary)] text-[var(--text-muted)]"
-                      aria-label="Edit prayer"
+                      aria-label={t.common.edit}
                     >
                       <Pencil size={14} />
                     </button>
@@ -307,12 +321,12 @@ export default function PrayerPage() {
                       }}
                     >
                       <CheckCircle2 size={14} />
-                      Answered
+                      {p.answered.replace(/[:：]$/, '')}
                     </Button>
                     <button
-                      onClick={() => { deletePrayer(prayer.id); showToast('Prayer removed'); }}
+                      onClick={() => { deletePrayer(prayer.id); showToast(p.prayerRemoved); }}
                       className="p-1.5 rounded-lg hover:bg-[var(--bg-secondary)] text-[var(--text-muted)]"
-                      aria-label="Delete prayer"
+                      aria-label={t.common.delete}
                     >
                       <X size={14} />
                     </button>
@@ -325,77 +339,77 @@ export default function PrayerPage() {
       )}
 
       {/* Add Prayer Modal */}
-      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="New Prayer Request">
+      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title={p.newRequestTitle}>
         <div className="space-y-4">
           <Input
-            label="Title"
-            placeholder="What would you like to pray about?"
+            label={t.common.title}
+            placeholder={p.whatPrayAbout}
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
           />
           <TextArea
-            label="Description"
-            placeholder="Pour out your heart..."
+            label={t.common.description}
+            placeholder={p.pourOutHeart}
             rows={4}
             value={newDescription}
             onChange={(e) => setNewDescription(e.target.value)}
           />
           <Select
-            label="Category"
-            options={categories.map(c => ({ value: c, label: c }))}
+            label={t.common.category}
+            options={categories.map(c => ({ value: c, label: categoryLabels[c] || c }))}
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value as PrayerCategory)}
           />
           <Button onClick={handleAddPrayer} className="w-full">
-            Add Prayer
+            {p.addPrayer}
           </Button>
         </div>
       </Modal>
 
       {/* Edit Prayer Modal */}
-      <Modal isOpen={!!editingPrayer} onClose={() => setEditingPrayer(null)} title="Edit Prayer">
+      <Modal isOpen={!!editingPrayer} onClose={() => setEditingPrayer(null)} title={p.editPrayer}>
         <div className="space-y-4">
           <Input
-            label="Title"
-            placeholder="Prayer title"
+            label={t.common.title}
+            placeholder={p.prayerTitle}
             value={editTitle}
             onChange={(e) => setEditTitle(e.target.value)}
           />
           <TextArea
-            label="Description"
-            placeholder="Prayer details..."
+            label={t.common.description}
+            placeholder={p.prayerDetails}
             rows={4}
             value={editDescription}
             onChange={(e) => setEditDescription(e.target.value)}
           />
           <Select
-            label="Category"
-            options={categories.map(c => ({ value: c, label: c }))}
+            label={t.common.category}
+            options={categories.map(c => ({ value: c, label: categoryLabels[c] || c }))}
             value={editCategory}
             onChange={(e) => setEditCategory(e.target.value as PrayerCategory)}
           />
           <Button onClick={handleEditPrayer} className="w-full">
-            Save Changes
+            {p.saveChanges}
           </Button>
         </div>
       </Modal>
 
       {/* Mark Answered Modal */}
-      <Modal isOpen={!!showAnswerModal} onClose={() => setShowAnswerModal(null)} title="Prayer Answered!">
+      <Modal isOpen={!!showAnswerModal} onClose={() => setShowAnswerModal(null)} title={p.prayerAnswered}>
         <div className="space-y-4">
           <p className="text-sm text-[var(--text-secondary)]">
-            Praise God! How did He answer this prayer?
+            {p.praiseGod}
           </p>
           <TextArea
-            label="Testimony Notes (optional)"
-            placeholder="Share how God answered this prayer..."
+            label={p.testimonyNotes}
+            placeholder={p.shareTestimony}
             rows={4}
             value={testimonyNotes}
             onChange={(e) => setTestimonyNotes(e.target.value)}
           />
           <Button onClick={() => showAnswerModal && handleMarkAnswered(showAnswerModal)} className="w-full" variant="gold">
             <CheckCircle2 size={16} />
-            Mark as Answered
+            {p.markAnswered}
           </Button>
         </div>
       </Modal>

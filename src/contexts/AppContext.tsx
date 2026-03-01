@@ -110,6 +110,7 @@ function saveToStorage<T>(key: string, value: T): boolean {
 const defaultSettings: AppSettings = {
   darkMode: false,
   fontSize: 'medium',
+  language: 'en',
   hasVisitedBefore: false,
   reminderEnabled: false,
   reminderTime: '08:00',
@@ -294,6 +295,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       else root.classList.add('text-base');
     }
   }, [settings.fontSize, isHydrated]);
+
+  // ── HTML lang attribute ──
+  useEffect(() => {
+    if (isHydrated) {
+      document.documentElement.lang = settings.language ?? 'en';
+    }
+  }, [settings.language, isHydrated]);
 
   // ────────────────────────────────────────────────
   // All mutations use write-through: setState + synchronous localStorage.setItem
