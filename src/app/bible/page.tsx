@@ -79,6 +79,21 @@ function getCacheKey(book: string, chapter: number, translation: string): string
   return `dw-bible-${translation}-${book}-${chapter}`;
 }
 
+/** Strip HTML tags from bolls.life verse text */
+function stripHtml(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function getLastRead(): LastRead {
   if (typeof window === 'undefined') return { book: 'Genesis', chapter: 1, translation: 'NIV' };
   try {
@@ -155,9 +170,15 @@ export default function BiblePage() {
     try {
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
-        setChapterData(JSON.parse(cached));
-        setError(null);
-        return;
+        const parsed = JSON.parse(cached);
+        // Invalidate old cache entries that contain HTML tags
+        const hasHtml = parsed.verses?.some((v: VerseData) => /<[^>]+>/.test(v.text));
+        if (!hasHtml) {
+          setChapterData(parsed);
+          setError(null);
+          return;
+        }
+        localStorage.removeItem(cacheKey);
       }
     } catch { /* ignore */ }
 
@@ -184,9 +205,9 @@ export default function BiblePage() {
             book_name: book,
             chapter,
             verse: v.verse,
-            text: v.text,
+            text: stripHtml(v.text),
           })),
-          text: data.map(v => v.text.trim()).join(' '),
+          text: data.map(v => stripHtml(v.text)).join(' '),
           translation_id: trans,
           translation_name: translationDef.label,
         };
