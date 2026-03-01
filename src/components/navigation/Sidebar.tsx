@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   PenLine,
+  Search,
   CloudCheck,
   Cloud,
   CloudOff,
@@ -32,6 +33,7 @@ const navItems = [
   { href: '/prayer', label: 'Prayer Journal', icon: BookHeart },
   { href: '/reading', label: 'Reading Plans', icon: BookOpen },
   { href: '/memory', label: 'Scripture Memory', icon: Brain },
+  { href: '/search', label: 'Bible Search', icon: Search },
   { href: '/gratitude', label: 'Gratitude Wall', icon: Heart },
   { href: '/growth', label: 'Growth Tracker', icon: TrendingUp },
 ];
