@@ -14,6 +14,7 @@ import { useApp } from '@/contexts/AppContext';
 import { useToast } from '@/components/ui/Toast';
 import { GratitudeEntry } from '@/lib/types';
 import { formatShortDate } from '@/lib/utils';
+import { useTranslation, getLocale } from '@/lib/i18n';
 
 const pastelClasses = ['pastel-rose', 'pastel-sky', 'pastel-emerald', 'pastel-amber', 'pastel-violet', 'pastel-pink'];
 const categoryOptions: GratitudeEntry['category'][] = ['Gratitude', 'Praise', 'Worship'];
@@ -21,6 +22,15 @@ const categoryOptions: GratitudeEntry['category'][] = ['Gratitude', 'Praise', 'W
 export default function GratitudePage() {
   const { gratitudeEntries, addGratitudeEntry, updateGratitudeEntry, deleteGratitudeEntry } = useApp();
   const { showToast } = useToast();
+  const { t, lang } = useTranslation();
+  const g = t.gratitude;
+
+  const categoryLabels: Record<string, string> = {
+    Gratitude: g.catGratitude,
+    Praise: g.catPraise,
+    Worship: g.catWorship,
+  };
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<string | null>(null);
   const [filterMonth, setFilterMonth] = useState<string>('all');
@@ -77,7 +87,7 @@ export default function GratitudePage() {
     setNewScripture('');
     setNewCategory('Gratitude');
     setShowAddModal(false);
-    showToast('Gratitude entry added');
+    showToast(g.entryAdded);
   };
 
   const openEditModal = (entry: GratitudeEntry) => {
@@ -95,19 +105,19 @@ export default function GratitudePage() {
       category: editCategory,
     });
     setEditingEntry(null);
-    showToast('Entry updated');
+    showToast(g.entryUpdated);
   };
 
   return (
     <AppLayout>
       <PageHeader
-        title="Gratitude Wall"
-        subtitle="Give thanks to the Lord, for He is good."
+        title={g.title}
+        subtitle={g.subtitle}
         icon={<Heart size={28} />}
         action={
           <Button onClick={() => setShowAddModal(true)}>
             <Plus size={16} />
-            Add Entry
+            {g.addEntry}
           </Button>
         }
       />
@@ -116,7 +126,7 @@ export default function GratitudePage() {
       {lastYearEntries.length > 0 && (
         <Card className="mb-6 bg-[var(--accent-gold)]/5 border-[var(--accent-gold)]/20">
           <h3 className="font-heading text-sm font-semibold text-[var(--accent-gold)] mb-2 flex items-center gap-2">
-            <Calendar size={14} /> This Time Last Year
+            <Calendar size={14} /> {g.lastYear}
           </h3>
           {lastYearEntries.map(entry => (
             <p key={entry.id} className="text-sm text-[var(--text-secondary)] italic">
@@ -131,11 +141,11 @@ export default function GratitudePage() {
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <Select
             options={[
-              { value: 'all', label: 'All Months' },
+              { value: 'all', label: t.common.allMonths },
               ...months.map(m => {
                 const [y, mon] = m.split('-');
                 const date = new Date(parseInt(y), parseInt(mon) - 1);
-                return { value: m, label: date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) };
+                return { value: m, label: date.toLocaleDateString(getLocale(lang), { month: 'long', year: 'numeric' }) };
               }),
             ]}
             value={filterMonth}
@@ -144,7 +154,7 @@ export default function GratitudePage() {
             aria-label="Filter by month"
           />
           <Select
-            options={[{ value: 'all', label: 'All Categories' }, ...categoryOptions.map(c => ({ value: c, label: c }))]}
+            options={[{ value: 'all', label: t.common.allCategories }, ...categoryOptions.map(c => ({ value: c, label: categoryLabels[c] || c }))]}
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
             className="sm:w-48"
@@ -157,16 +167,16 @@ export default function GratitudePage() {
       {filteredEntries.length === 0 ? (
         <EmptyState
           icon={<Heart size={48} />}
-          title="Your gratitude wall is empty"
-          description="Start capturing moments of praise and thankfulness."
+          title={g.emptyTitle}
+          description={g.emptyDesc}
           scripture={{
-            text: 'Enter his gates with thanksgiving and his courts with praise; give thanks to him and praise his name.',
-            reference: 'Psalm 100:4',
+            text: g.emptyScripture,
+            reference: g.emptyScriptureRef,
           }}
           action={
             <Button onClick={() => setShowAddModal(true)}>
               <Plus size={16} />
-              Add First Entry
+              {g.addFirst}
             </Button>
           }
         />
@@ -187,7 +197,7 @@ export default function GratitudePage() {
                   </span>
                   <div className="flex items-center gap-1">
                     <span className="text-xs px-2 py-0.5 rounded-full bg-white/50 dark:bg-black/20 text-[var(--text-muted)]">
-                      {entry.category}
+                      {categoryLabels[entry.category] || entry.category}
                     </span>
                     <button
                       onClick={() => openEditModal(entry)}
@@ -197,7 +207,7 @@ export default function GratitudePage() {
                       <Pencil size={12} />
                     </button>
                     <button
-                      onClick={() => { deleteGratitudeEntry(entry.id); showToast('Entry removed'); }}
+                      onClick={() => { deleteGratitudeEntry(entry.id); showToast(g.entryRemoved); }}
                       className="p-1 rounded-lg hover:bg-white/50 dark:hover:bg-black/20 text-[var(--text-muted)]"
                       aria-label="Delete entry"
                     >
@@ -218,58 +228,58 @@ export default function GratitudePage() {
       )}
 
       {/* Add Modal */}
-      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="New Gratitude Entry">
+      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title={g.newEntry}>
         <div className="space-y-4">
           <TextArea
-            label="What are you thankful for?"
-            placeholder="Share your gratitude, praise, or worship reflection..."
+            label={g.thankfulFor}
+            placeholder={g.sharePlaceholder}
             rows={4}
             value={newText}
             onChange={(e) => setNewText(e.target.value)}
           />
           <Input
-            label="Scripture Reference (optional)"
-            placeholder="e.g., Psalm 136:1"
+            label={g.scriptureRef}
+            placeholder={g.scriptureRefPlaceholder}
             value={newScripture}
             onChange={(e) => setNewScripture(e.target.value)}
           />
           <Select
-            label="Category"
-            options={categoryOptions.map(c => ({ value: c, label: c }))}
+            label={t.common.category}
+            options={categoryOptions.map(c => ({ value: c, label: categoryLabels[c] || c }))}
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value as GratitudeEntry['category'])}
           />
           <Button onClick={handleAdd} className="w-full" variant="gold">
             <Heart size={16} />
-            Add to Wall
+            {g.addToWall}
           </Button>
         </div>
       </Modal>
 
       {/* Edit Modal */}
-      <Modal isOpen={!!editingEntry} onClose={() => setEditingEntry(null)} title="Edit Entry">
+      <Modal isOpen={!!editingEntry} onClose={() => setEditingEntry(null)} title={g.editEntry}>
         <div className="space-y-4">
           <TextArea
-            label="Gratitude Text"
-            placeholder="What are you thankful for?"
+            label={g.gratitudeText}
+            placeholder={g.thankfulFor}
             rows={4}
             value={editText}
             onChange={(e) => setEditText(e.target.value)}
           />
           <Input
-            label="Scripture Reference (optional)"
-            placeholder="e.g., Psalm 136:1"
+            label={g.scriptureRef}
+            placeholder={g.scriptureRefPlaceholder}
             value={editScripture}
             onChange={(e) => setEditScripture(e.target.value)}
           />
           <Select
-            label="Category"
-            options={categoryOptions.map(c => ({ value: c, label: c }))}
+            label={t.common.category}
+            options={categoryOptions.map(c => ({ value: c, label: categoryLabels[c] || c }))}
             value={editCategory}
             onChange={(e) => setEditCategory(e.target.value as GratitudeEntry['category'])}
           />
           <Button onClick={handleEdit} className="w-full">
-            Save Changes
+            {g.saveChanges}
           </Button>
         </div>
       </Modal>

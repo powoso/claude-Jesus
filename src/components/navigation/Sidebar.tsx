@@ -27,22 +27,23 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
 import { useSync } from '@/contexts/SyncContext';
+import { useTranslation } from '@/lib/i18n';
 
 const navItems = [
-  { href: '/devotional', label: 'Devotional', icon: Home },
-  { href: '/journal', label: 'Journal', icon: PenLine },
-  { href: '/prayer', label: 'Prayer Journal', icon: BookHeart },
-  { href: '/reading', label: 'Reading Plans', icon: BookOpen },
-  { href: '/bible', label: 'The Bible', icon: Library },
-  { href: '/search', label: 'Bible Search', icon: Search },
-  { href: '/gratitude', label: 'Gratitude Wall', icon: Heart },
-  { href: '/growth', label: 'Growth Tracker', icon: TrendingUp },
+  { href: '/devotional', labelKey: 'devotional' as const, icon: Home },
+  { href: '/journal', labelKey: 'journal' as const, icon: PenLine },
+  { href: '/prayer', labelKey: 'prayerJournal' as const, icon: BookHeart },
+  { href: '/reading', labelKey: 'readingPlans' as const, icon: BookOpen },
+  { href: '/bible', labelKey: 'theBible' as const, icon: Library },
+  { href: '/search', labelKey: 'bibleSearch' as const, icon: Search },
+  { href: '/gratitude', labelKey: 'gratitudeWall' as const, icon: Heart },
+  { href: '/growth', labelKey: 'growthTracker' as const, icon: TrendingUp },
 ];
 
 const bottomItems = [
-  { href: '/suggestions', label: 'Suggestions', icon: MessageCircleHeart },
-  { href: '/settings', label: 'Settings', icon: Settings },
-  { href: '/about', label: 'About', icon: Info },
+  { href: '/suggestions', labelKey: 'suggestions' as const, icon: MessageCircleHeart },
+  { href: '/settings', labelKey: 'settings' as const, icon: Settings },
+  { href: '/about', labelKey: 'about' as const, icon: Info },
 ];
 
 export function Sidebar() {
@@ -50,6 +51,9 @@ export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const { lastSaved } = useApp();
   const { user, syncStatus } = useSync();
+  const { t } = useTranslation();
+
+  const getLabel = (key: keyof typeof t.nav) => t.nav[key];
 
   return (
     <>
@@ -58,11 +62,11 @@ export function Sidebar() {
         <div className="p-6 border-b border-[var(--border-color)]">
           <Link href="/devotional" className="flex items-center gap-2.5">
             <Image src="/favicon.svg" alt="Daily Walk" width={32} height={32} className="rounded-lg" />
-            <span className="font-heading text-xl font-bold text-[var(--text-primary)]">Daily Walk</span>
+            <span className="font-heading text-xl font-bold text-[var(--text-primary)]">{t.common.appName}</span>
           </Link>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1" aria-label="Main navigation">
+        <nav className="flex-1 p-4 space-y-1" aria-label={t.nav.mainNav}>
           {navItems.map(item => {
             const isActive = pathname === item.href;
             return (
@@ -78,7 +82,7 @@ export function Sidebar() {
                 aria-current={isActive ? 'page' : undefined}
               >
                 <item.icon size={18} />
-                {item.label}
+                {getLabel(item.labelKey)}
               </Link>
             );
           })}
@@ -89,19 +93,19 @@ export function Sidebar() {
           {user ? (
             <div className="flex items-center gap-2 px-4 py-2 text-xs text-[var(--text-muted)]">
               {syncStatus === 'syncing' ? (
-                <><Loader2 size={14} className="text-amber-500 animate-spin" /><span>Syncing...</span></>
+                <><Loader2 size={14} className="text-amber-500 animate-spin" /><span>{t.sync.syncing}</span></>
               ) : syncStatus === 'synced' ? (
-                <><Cloud size={14} className="text-emerald-500" /><span>Synced to cloud</span></>
+                <><Cloud size={14} className="text-emerald-500" /><span>{t.sync.syncedToCloud}</span></>
               ) : syncStatus === 'error' ? (
-                <><CloudOff size={14} className="text-red-500" /><span>Sync error</span></>
+                <><CloudOff size={14} className="text-red-500" /><span>{t.sync.syncError}</span></>
               ) : (
-                <><Cloud size={14} /><span>Cloud connected</span></>
+                <><Cloud size={14} /><span>{t.sync.cloudConnected}</span></>
               )}
             </div>
           ) : lastSaved ? (
             <div className="flex items-center gap-2 px-4 py-2 text-xs text-[var(--text-muted)]">
               <CloudCheck size={14} className="text-emerald-500" />
-              <span>Saved locally</span>
+              <span>{t.sync.savedLocally}</span>
             </div>
           ) : null}
           {bottomItems.map(item => {
@@ -118,7 +122,7 @@ export function Sidebar() {
                 )}
               >
                 <item.icon size={18} />
-                {item.label}
+                {getLabel(item.labelKey)}
               </Link>
             );
           })}
@@ -129,12 +133,12 @@ export function Sidebar() {
       <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-[var(--bg-card)] border-b border-[var(--border-color)] z-50 flex items-center justify-between px-4">
         <Link href="/devotional" className="flex items-center gap-2">
           <Image src="/favicon.svg" alt="Daily Walk" width={28} height={28} className="rounded-lg" />
-          <span className="font-heading text-lg font-bold text-[var(--text-primary)]">Daily Walk</span>
+          <span className="font-heading text-lg font-bold text-[var(--text-primary)]">{t.common.appName}</span>
         </Link>
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="p-2 rounded-lg hover:bg-[var(--bg-secondary)]"
-          aria-label="Toggle menu"
+          aria-label={t.nav.toggleMenu}
           aria-expanded={isOpen}
         >
           {isOpen ? <X size={20} /> : <Menu size={20} />}
@@ -159,7 +163,7 @@ export function Sidebar() {
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="lg:hidden fixed right-0 top-14 bottom-0 w-64 bg-[var(--bg-card)] border-l border-[var(--border-color)] z-50 p-4"
             >
-              <nav className="space-y-1" aria-label="Mobile navigation">
+              <nav className="space-y-1" aria-label={t.nav.mobileNav}>
                 {[...navItems, ...bottomItems].map(item => {
                   const isActive = pathname === item.href;
                   return (
@@ -175,7 +179,7 @@ export function Sidebar() {
                       )}
                     >
                       <item.icon size={18} />
-                      {item.label}
+                      {getLabel(item.labelKey)}
                     </Link>
                   );
                 })}
@@ -186,7 +190,7 @@ export function Sidebar() {
       </AnimatePresence>
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[var(--bg-card)] border-t border-[var(--border-color)] z-40 safe-bottom" aria-label="Bottom navigation">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[var(--bg-card)] border-t border-[var(--border-color)] z-40 safe-bottom" aria-label={t.nav.bottomNav}>
         <div className="flex items-center justify-around h-16 px-1">
           {navItems.slice(0, 7).map(item => {
             const isActive = pathname === item.href;
@@ -201,7 +205,7 @@ export function Sidebar() {
                 aria-current={isActive ? 'page' : undefined}
               >
                 <item.icon size={18} />
-                <span className="text-[9px] font-medium leading-tight">{item.label.split(' ')[0]}</span>
+                <span className="text-[9px] font-medium leading-tight">{getLabel(item.labelKey).split(' ')[0]}</span>
               </Link>
             );
           })}
@@ -213,7 +217,7 @@ export function Sidebar() {
             )}
           >
             <Settings size={18} />
-            <span className="text-[9px] font-medium leading-tight">More</span>
+            <span className="text-[9px] font-medium leading-tight">{t.common.more}</span>
           </Link>
         </div>
       </nav>

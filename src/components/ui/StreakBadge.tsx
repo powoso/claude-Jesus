@@ -2,6 +2,7 @@
 
 import { Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 interface StreakBadgeProps {
   count: number;
@@ -9,7 +10,10 @@ interface StreakBadgeProps {
   className?: string;
 }
 
-export function StreakBadge({ count, label = 'day streak', className }: StreakBadgeProps) {
+export function StreakBadge({ count, label, className }: StreakBadgeProps) {
+  const { t } = useTranslation();
+  const displayLabel = label ?? t.common.dayStreak;
+
   if (count === 0) return null;
 
   return (
@@ -20,7 +24,7 @@ export function StreakBadge({ count, label = 'day streak', className }: StreakBa
     )}>
       <Flame size={14} className="text-amber-500" />
       <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
-        {count} {label}
+        {count} {displayLabel}
       </span>
     </div>
   );
