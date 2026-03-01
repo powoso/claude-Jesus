@@ -5,4 +5,4 @@ Disallow: /settings
 Disallow: /api/
 
 Sitemap: https://daily-walk.com/sitemap.xml
-Sitemap: https://daily-walk.app/sitemap.xml
+Sitemap: https://daily-walk.app/sitemap-app.xml
