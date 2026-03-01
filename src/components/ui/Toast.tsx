@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useCallback, useState, ReactNode } from 'react';
+import { createContext, useContext, useCallback, useState, useEffect, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, AlertCircle, Info, X } from 'lucide-react';
 
@@ -38,6 +38,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const dismiss = useCallback((id: string) => {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
+
+  // Listen for storage errors from the data layer
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as string;
+      showToast(detail || 'Failed to save — storage may be full', 'error');
+    };
+    window.addEventListener('dw-storage-error', handler);
+    return () => window.removeEventListener('dw-storage-error', handler);
+  }, [showToast]);
 
   return (
     <ToastContext.Provider value={{ showToast }}>

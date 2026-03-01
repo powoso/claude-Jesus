@@ -90,12 +90,20 @@ function loadFromStorage<T>(key: string, fallback: T): T {
 }
 
 // Synchronous write-through — data hits localStorage the instant it changes
-function saveToStorage<T>(key: string, value: T): void {
-  if (typeof window === 'undefined') return;
+// Returns false if the save fails (e.g. quota exceeded) so callers can alert the user
+function saveToStorage<T>(key: string, value: T): boolean {
+  if (typeof window === 'undefined') return false;
   try {
     localStorage.setItem(key, JSON.stringify(value));
+    return true;
   } catch (error) {
     console.warn('Error saving to localStorage:', error);
+    // Surface an alert so the user knows their data wasn't persisted
+    try {
+      const event = new CustomEvent('dw-storage-error', { detail: 'Your device storage is full. Please free up space or export your data from Settings.' });
+      window.dispatchEvent(event);
+    } catch { /* ignore */ }
+    return false;
   }
 }
 

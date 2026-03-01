@@ -130,7 +130,7 @@ export default function DevotionalPage() {
             </div>
 
             {/* Activity Streaks */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               {streaks.map(s => (
                 <div key={s.label} className="text-center p-3 rounded-xl bg-[var(--bg-card)]">
                   <div className="flex items-center justify-center gap-1.5 text-[var(--accent)] mb-1">
