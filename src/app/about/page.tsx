@@ -91,7 +91,7 @@ export default function AboutPage() {
           </p>
           <div className="space-y-3">
             <a
-              href="https://www.paypal.com/paypalme/PaulChung11111"
+              href="https://www.paypal.me/PaulChung11111"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 p-4 rounded-xl bg-[#0070BA]/10 border border-[#0070BA]/20 hover:bg-[#0070BA]/15 transition-all duration-200 group"
