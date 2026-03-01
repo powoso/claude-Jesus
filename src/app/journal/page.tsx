@@ -14,7 +14,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { useApp } from '@/contexts/AppContext';
 import { useToast } from '@/components/ui/Toast';
 import { dailyVerses } from '@/data/verses';
-import { formatShortDate, getDateKey } from '@/lib/utils';
+import { getDayOfYear, formatShortDate } from '@/lib/utils';
 import { JournalEntry, JournalMood } from '@/lib/types';
 
 const MOODS: { value: JournalMood; emoji: string; label: string }[] = [
@@ -44,8 +44,15 @@ function dateKeyToDate(dateKey: string): Date | null {
   return date;
 }
 
+function getTodaysVerse() {
+  const today = new Date();
+  const dayOfYear = getDayOfYear(today);
+  const verseIndex = ((dayOfYear - 1) % dailyVerses.length + dailyVerses.length) % dailyVerses.length;
+  return dailyVerses[verseIndex];
+}
+
 export default function JournalPage() {
-  const { journalEntries, saveJournalEntry, getJournalEntry } = useApp();
+  const { journalEntries, addJournalEntry, updateJournalEntry, deleteJournalEntry } = useApp();
   const { showToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -55,9 +62,6 @@ export default function JournalPage() {
   const [showNewEntry, setShowNewEntry] = useState(false);
   const [newText, setNewText] = useState('');
   const [newMood, setNewMood] = useState<JournalMood | undefined>(undefined);
-
-  const todayKey = getDateKey();
-  const todayEntry = getJournalEntry(todayKey);
 
   const sortedEntries = useMemo(() => {
     let entries = [...journalEntries].sort((a, b) =>
@@ -107,25 +111,21 @@ export default function JournalPage() {
 
   const handleSaveEdit = (entry: JournalEntry) => {
     if (!editText.trim()) return;
-    saveJournalEntry(entry.dateKey, editText.trim(), entry.verseId, editMood);
+    updateJournalEntry(entry.id, editText.trim(), editMood);
     setEditingId(null);
     showToast('Journal entry updated');
   };
 
   const handleDeleteEntry = (entry: JournalEntry) => {
-    saveJournalEntry(entry.dateKey, '', entry.verseId);
+    deleteJournalEntry(entry.id);
+    setExpandedId(null);
     showToast('Journal entry removed');
   };
 
   const handleNewEntry = () => {
     if (!newText.trim()) return;
-    const today = new Date();
-    const dayOfYear = Math.floor(
-      (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000
-    );
-    const verseIndex = ((dayOfYear - 1) % dailyVerses.length + dailyVerses.length) % dailyVerses.length;
-    const verse = dailyVerses[verseIndex];
-    saveJournalEntry(todayKey, newText.trim(), verse.id, newMood);
+    const verse = getTodaysVerse();
+    addJournalEntry(newText.trim(), verse.id, newMood);
     setNewText('');
     setNewMood(undefined);
     setShowNewEntry(false);
@@ -148,8 +148,8 @@ export default function JournalPage() {
               </span>
             )}
             <Button onClick={() => {
-              setNewText(todayEntry?.text || '');
-              setNewMood(todayEntry?.mood);
+              setNewText('');
+              setNewMood(undefined);
               setShowNewEntry(true);
             }}>
               <Plus size={16} />
@@ -173,7 +173,7 @@ export default function JournalPage() {
                 <div className="flex items-center gap-2">
                   <PenLine size={18} className="text-[var(--accent)]" />
                   <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
-                    {todayEntry ? 'Update Today\'s Entry' : 'Today\'s Reflection'}
+                    New Reflection
                   </h2>
                 </div>
                 <button
@@ -185,12 +185,7 @@ export default function JournalPage() {
                 </button>
               </div>
               {(() => {
-                const today = new Date();
-                const dayOfYear = Math.floor(
-                  (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000
-                );
-                const verseIndex = ((dayOfYear - 1) % dailyVerses.length + dailyVerses.length) % dailyVerses.length;
-                const verse = dailyVerses[verseIndex];
+                const verse = getTodaysVerse();
                 return (
                   <div className="bg-[var(--bg-secondary)] rounded-xl p-4 mb-4">
                     <p className="font-scripture text-sm text-[var(--text-secondary)] leading-relaxed">

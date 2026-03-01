@@ -39,6 +39,9 @@ interface AppState {
   deleteGratitudeEntry: (id: string) => void;
 
   journalEntries: JournalEntry[];
+  addJournalEntry: (text: string, verseId: number, mood?: string) => void;
+  updateJournalEntry: (id: string, text: string, mood?: string) => void;
+  deleteJournalEntry: (id: string) => void;
   saveJournalEntry: (dateKey: string, text: string, verseId: number, mood?: string) => void;
   getJournalEntry: (dateKey: string) => JournalEntry | undefined;
 
@@ -493,6 +496,50 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     syncAfterSave();
   }, [markSaved, syncAfterSave]);
 
+  const addJournalEntry = useCallback((text: string, verseId: number, mood?: string) => {
+    const now = new Date().toISOString();
+    const newEntry: JournalEntry = {
+      id: generateId(),
+      dateKey: getDateKey(),
+      text,
+      verseId,
+      ...(mood ? { mood: mood as JournalEntry['mood'] } : {}),
+      createdAt: now,
+      updatedAt: now,
+    };
+    setJournalEntries(prev => {
+      const next = [newEntry, ...prev];
+      saveToStorage(KEYS.journal, next);
+      markSaved();
+      return next;
+    });
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
+
+  const updateJournalEntry = useCallback((id: string, text: string, mood?: string) => {
+    setJournalEntries(prev => {
+      const next = prev.map(e => e.id === id
+        ? { ...e, text, ...(mood !== undefined ? { mood: mood as JournalEntry['mood'] } : {}), updatedAt: new Date().toISOString() }
+        : e
+      );
+      saveToStorage(KEYS.journal, next);
+      markSaved();
+      return next;
+    });
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
+
+  const deleteJournalEntry = useCallback((id: string) => {
+    setJournalEntries(prev => {
+      const next = prev.filter(e => e.id !== id);
+      saveToStorage(KEYS.journal, next);
+      markSaved();
+      return next;
+    });
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
+
+  // Used by the devotional page for its per-day journal (create-or-update by dateKey)
   const saveJournalEntry = useCallback((dateKey: string, text: string, verseId: number, mood?: string) => {
     setJournalEntries(prev => {
       const existing = prev.find(e => e.dateKey === dateKey);
@@ -642,6 +689,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       updateGratitudeEntry,
       deleteGratitudeEntry,
       journalEntries,
+      addJournalEntry,
+      updateJournalEntry,
+      deleteJournalEntry,
       saveJournalEntry,
       getJournalEntry,
       weeklyCheckIns,
