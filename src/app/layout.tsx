@@ -73,7 +73,10 @@ export const metadata: Metadata = {
     images: ['/icon-512.png'],
   },
   verification: {
-    google: 'M3A5IZgDdDT3DhwS3seCJjlDUAwmuKXqQO0i01q-7uM',
+    google: [
+      'M3A5IZgDdDT3DhwS3seCJjlDUAwmuKXqQO0i01q-7uM',
+      '1zi8ehr-FcvD6GnZqU_JyERntaC_8O_r5DCjc_MV5c8',
+    ],
   },
   robots: {
     index: true,
