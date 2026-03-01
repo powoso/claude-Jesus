@@ -79,17 +79,25 @@ function getCacheKey(book: string, chapter: number, translation: string): string
   return `dw-bible-${translation}-${book}-${chapter}`;
 }
 
-/** Strip HTML tags from bolls.life verse text */
+/** Strip HTML tags and section headings from bolls.life verse text */
 function stripHtml(html: string): string {
   return html
+    // Remove section headings (h1-h6) and their content entirely
+    .replace(/<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi, '')
+    // Remove paragraph/div wrappers for headings (class="s1","s","d","qa" etc.)
+    .replace(/<p[^>]*class="[^"]*(?:heading|title|s1|s2|ms|mr|d\b|qa|qc|mt)[^"]*"[^>]*>[\s\S]*?<\/p>/gi, '')
+    // Replace line breaks with space
     .replace(/<br\s*\/?>/gi, ' ')
+    // Remove all remaining HTML tags
     .replace(/<[^>]*>/g, '')
+    // Decode HTML entities
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
+    // Clean up whitespace
     .replace(/\s+/g, ' ')
     .trim();
 }
