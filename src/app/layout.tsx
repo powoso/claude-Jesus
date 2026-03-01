@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { Analytics } from '@vercel/analytics/next';
 import { AppProvider } from '@/contexts/AppContext';
 import { SyncProvider } from '@/contexts/SyncContext';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -147,6 +148,7 @@ export default function RootLayout({
             </ToastProvider>
           </AppProvider>
         </SyncProvider>
+        <Analytics />
       </body>
     </html>
   );
