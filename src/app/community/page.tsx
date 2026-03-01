@@ -1,29 +1,30 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import {
   Users,
   Plus,
   HandHeart,
-  Search,
   Filter,
   X,
   Trash2,
   Clock,
   UserCircle,
   EyeOff,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
 import { AppLayout } from '@/components/navigation/AppLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Modal } from '@/components/ui/Modal';
 import { useApp } from '@/contexts/AppContext';
 import { useToast } from '@/components/ui/Toast';
+import { useCommunityPrayers } from '@/hooks/useCommunityPrayers';
 import { CommunityPrayer, PrayerCategory } from '@/lib/types';
 
 const CATEGORIES: PrayerCategory[] = [
@@ -40,9 +41,10 @@ const CATEGORY_COLORS: Record<PrayerCategory, string> = {
   Guidance: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300',
 };
 
-// Pre-seeded community prayers to give the wall life from day one
-const SEEDED_PRAYERS: Omit<CommunityPrayer, 'id'>[] = [
+// Fallback seeded prayers when Firebase is not configured
+const SEEDED_PRAYERS: CommunityPrayer[] = [
   {
+    id: 'seeded-0',
     name: 'Sarah M.',
     request: 'Please pray for my mother who is going through chemotherapy. She needs strength and comfort during this difficult time.',
     category: 'Healing',
@@ -53,6 +55,7 @@ const SEEDED_PRAYERS: Omit<CommunityPrayer, 'id'>[] = [
     isSeeded: true,
   },
   {
+    id: 'seeded-1',
     name: 'Anonymous',
     request: 'Praying for guidance on a major career decision. I want to follow God\'s will but the path is unclear.',
     category: 'Guidance',
@@ -63,6 +66,7 @@ const SEEDED_PRAYERS: Omit<CommunityPrayer, 'id'>[] = [
     isSeeded: true,
   },
   {
+    id: 'seeded-2',
     name: 'David K.',
     request: 'Thanking God for the birth of our healthy baby girl! We are so blessed and grateful.',
     category: 'Gratitude',
@@ -73,6 +77,7 @@ const SEEDED_PRAYERS: Omit<CommunityPrayer, 'id'>[] = [
     isSeeded: true,
   },
   {
+    id: 'seeded-3',
     name: 'Maria L.',
     request: 'Please lift up our church community as we begin our spring outreach program. May God use us to serve those in need.',
     category: 'Intercession',
@@ -83,6 +88,7 @@ const SEEDED_PRAYERS: Omit<CommunityPrayer, 'id'>[] = [
     isSeeded: true,
   },
   {
+    id: 'seeded-4',
     name: 'Anonymous',
     request: 'Struggling with anxiety and feeling distant from God. Please pray for peace and restored faith.',
     category: 'Petition',
@@ -93,6 +99,7 @@ const SEEDED_PRAYERS: Omit<CommunityPrayer, 'id'>[] = [
     isSeeded: true,
   },
   {
+    id: 'seeded-5',
     name: 'James W.',
     request: 'Praising God for answered prayer — my son just got accepted to college with a full scholarship!',
     category: 'Praise',
@@ -103,6 +110,7 @@ const SEEDED_PRAYERS: Omit<CommunityPrayer, 'id'>[] = [
     isSeeded: true,
   },
   {
+    id: 'seeded-6',
     name: 'Rachel T.',
     request: 'Please pray for my marriage. We are going through a rough patch and need God\'s healing and wisdom.',
     category: 'Healing',
@@ -113,6 +121,7 @@ const SEEDED_PRAYERS: Omit<CommunityPrayer, 'id'>[] = [
     isSeeded: true,
   },
   {
+    id: 'seeded-7',
     name: 'Anonymous',
     request: 'Seeking forgiveness and the courage to make things right with someone I hurt deeply.',
     category: 'Confession',
@@ -141,8 +150,13 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function CommunityPrayerWallPage() {
-  const { communityPrayers, addCommunityPrayer, togglePrayedFor, deleteCommunityPrayer } = useApp();
+  // Firestore-backed shared prayers (when Firebase is configured)
+  const firestore = useCommunityPrayers();
+  // Local fallback (when Firebase is not configured)
+  const local = useApp();
   const { showToast } = useToast();
+
+  const isLive = firestore.connected;
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -152,38 +166,29 @@ export default function CommunityPrayerWallPage() {
   const [category, setCategory] = useState<PrayerCategory>('Petition');
   const [isAnonymous, setIsAnonymous] = useState(false);
 
-  // Combine seeded + user prayers, applying user's prayed state to seeded ones
+  // Use Firestore prayers when connected, otherwise local + seeded fallback
   const allPrayers = useMemo(() => {
-    // Build a map of user interactions with seeded prayers (by request text)
-    const userPrayerMap = new Map<string, CommunityPrayer>();
+    if (isLive) return firestore.prayers;
+    // Local fallback: merge user prayers with seeded ones
+    const userMap = new Map<string, CommunityPrayer>();
     const userOriginals: CommunityPrayer[] = [];
-
-    for (const p of communityPrayers) {
-      if (p.isSeeded) {
-        userPrayerMap.set(p.request, p);
-      } else {
-        userOriginals.push(p);
-      }
+    for (const p of local.communityPrayers) {
+      if (p.isSeeded) userMap.set(p.request, p);
+      else userOriginals.push(p);
     }
-
-    // Merge seeded prayers with any user interactions
-    const seeded: CommunityPrayer[] = SEEDED_PRAYERS.map((sp, i) => {
-      const userVersion = userPrayerMap.get(sp.request);
-      if (userVersion) return userVersion;
-      return { ...sp, id: `seeded-${i}` };
+    const seeded = SEEDED_PRAYERS.map(sp => {
+      const userVersion = userMap.get(sp.request);
+      return userVersion || sp;
     });
-
     return [...userOriginals, ...seeded];
-  }, [communityPrayers]);
+  }, [isLive, firestore.prayers, local.communityPrayers]);
 
-  // Filtered results
+  // Filtered + sorted
   const filteredPrayers = useMemo(() => {
     let result = allPrayers;
-
     if (selectedCategory) {
       result = result.filter(p => p.category === selectedCategory);
     }
-
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(p =>
@@ -191,12 +196,10 @@ export default function CommunityPrayerWallPage() {
         p.name.toLowerCase().includes(q)
       );
     }
-
-    // Sort by newest first
     return result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [allPrayers, selectedCategory, searchQuery]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!request.trim()) {
       showToast('Please enter a prayer request', 'error');
       return;
@@ -206,12 +209,18 @@ export default function CommunityPrayerWallPage() {
       return;
     }
 
-    addCommunityPrayer({
+    const payload = {
       name: isAnonymous ? 'Anonymous' : name.trim(),
       request: request.trim(),
       category,
       isAnonymous,
-    });
+    };
+
+    if (isLive) {
+      await firestore.addPrayer(payload);
+    } else {
+      local.addCommunityPrayer(payload);
+    }
 
     showToast('Prayer request shared with the community!', 'success');
     setShowAddModal(false);
@@ -221,44 +230,27 @@ export default function CommunityPrayerWallPage() {
     setIsAnonymous(false);
   };
 
-  const handlePray = (prayer: CommunityPrayer) => {
-    // For seeded prayers, we need to save them to local storage first
-    if (prayer.id.startsWith('seeded-')) {
-      // Save this seeded prayer to local storage with hasPrayed toggled
-      const newPrayer: CommunityPrayer = {
-        ...prayer,
-        id: prayer.id,
-        hasPrayed: true,
-        prayedCount: prayer.prayedCount + 1,
-        isSeeded: true,
-      };
-      // We need to add it directly — the AppContext will handle it
-      addCommunityPrayer({
-        name: prayer.name,
-        request: prayer.request,
-        category: prayer.category,
-        isAnonymous: prayer.isAnonymous,
-      });
-      // Immediately toggle it
-      const prayers = JSON.parse(localStorage.getItem('dw-community-prayers') || '[]');
-      const last = prayers[0];
-      if (last) {
-        last.hasPrayed = true;
-        last.prayedCount = prayer.prayedCount + 1;
-        last.isSeeded = true;
-        last.createdAt = prayer.createdAt;
-        localStorage.setItem('dw-community-prayers', JSON.stringify(prayers));
+  const handlePray = async (prayer: CommunityPrayer) => {
+    if (isLive) {
+      await firestore.togglePrayedFor(prayer.id);
+      if (!prayer.hasPrayed) {
+        showToast('Praying for this request', 'success');
       }
-      showToast('Praying for this request', 'success');
-      // Force re-render
-      window.dispatchEvent(new Event('storage'));
-      return;
+    } else {
+      local.togglePrayedFor(prayer.id);
+      if (!prayer.hasPrayed) {
+        showToast('Praying for this request', 'success');
+      }
     }
+  };
 
-    togglePrayedFor(prayer.id);
-    if (!prayer.hasPrayed) {
-      showToast('Praying for this request', 'success');
+  const handleDelete = async (prayer: CommunityPrayer) => {
+    if (isLive) {
+      await firestore.deletePrayer(prayer.id);
+    } else {
+      local.deleteCommunityPrayer(prayer.id);
     }
+    showToast('Prayer request removed', 'info');
   };
 
   const totalPrayers = allPrayers.length;
@@ -271,6 +263,28 @@ export default function CommunityPrayerWallPage() {
         subtitle="Bear one another's burdens and pray together"
         icon={<Users size={28} />}
       />
+
+      {/* Connection status */}
+      <div className="flex items-center justify-center gap-2 mb-4">
+        {isLive ? (
+          <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+            <Wifi size={12} />
+            Live — prayers shared with everyone
+          </span>
+        ) : (
+          <span className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-muted)]">
+            <WifiOff size={12} />
+            Local only — set up Firebase to share with others
+          </span>
+        )}
+      </div>
+
+      {/* Loading state */}
+      {isLive && firestore.loading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-sm text-[var(--text-muted)]">Loading prayer wall...</div>
+        </div>
+      )}
 
       {/* Stats bar */}
       <div className="grid grid-cols-2 gap-3 mb-6">
@@ -332,7 +346,7 @@ export default function CommunityPrayerWallPage() {
       </Card>
 
       {/* Prayer list */}
-      {filteredPrayers.length === 0 ? (
+      {filteredPrayers.length === 0 && !(isLive && firestore.loading) ? (
         <EmptyState
           icon={<HandHeart size={48} />}
           title="No prayer requests yet"
@@ -403,10 +417,7 @@ export default function CommunityPrayerWallPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => {
-                        deleteCommunityPrayer(prayer.id);
-                        showToast('Prayer request removed', 'info');
-                      }}
+                      onClick={() => handleDelete(prayer)}
                       title="Delete"
                     >
                       <Trash2 size={14} />
@@ -516,7 +527,10 @@ export default function CommunityPrayerWallPage() {
           </div>
 
           <p className="text-xs text-center text-[var(--text-muted)]">
-            Your prayer request will be visible on the community wall.
+            {isLive
+              ? 'Your prayer request will be visible to everyone using Daily Walk.'
+              : 'Your prayer request will be saved locally on this device.'
+            }
           </p>
         </div>
       </Modal>
