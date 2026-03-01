@@ -147,7 +147,11 @@ export default function JournalPage() {
                 {totalEntries} {totalEntries === 1 ? 'entry' : 'entries'}
               </span>
             )}
-            <Button onClick={() => setShowNewEntry(true)}>
+            <Button onClick={() => {
+              setNewText(todayEntry?.text || '');
+              setNewMood(todayEntry?.mood);
+              setShowNewEntry(true);
+            }}>
               <Plus size={16} />
               New Entry
             </Button>
@@ -201,7 +205,7 @@ export default function JournalPage() {
               <MoodPicker selected={newMood} onSelect={setNewMood} />
 
               <textarea
-                value={newText || todayEntry?.text || ''}
+                value={newText}
                 onChange={(e) => setNewText(e.target.value)}
                 placeholder="What is God speaking to your heart today?"
                 rows={5}
@@ -249,7 +253,11 @@ export default function JournalPage() {
           }}
           action={
             !showNewEntry ? (
-              <Button onClick={() => setShowNewEntry(true)}>
+              <Button onClick={() => {
+                setNewText('');
+                setNewMood(undefined);
+                setShowNewEntry(true);
+              }}>
                 <Plus size={16} />
                 Write Your First Entry
               </Button>
