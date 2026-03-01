@@ -55,6 +55,12 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://daily-walk.app/suggestions</loc>
+    <lastmod>2026-03-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://daily-walk.app/about</loc>
     <lastmod>2026-03-01</lastmod>
     <changefreq>monthly</changefreq>

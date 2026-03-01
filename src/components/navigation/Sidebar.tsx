@@ -21,6 +21,7 @@ import {
   Cloud,
   CloudOff,
   Loader2,
+  MessageCircleHeart,
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -39,6 +40,7 @@ const navItems = [
 ];
 
 const bottomItems = [
+  { href: '/suggestions', label: 'Suggestions', icon: MessageCircleHeart },
   { href: '/settings', label: 'Settings', icon: Settings },
   { href: '/about', label: 'About', icon: Info },
 ];
