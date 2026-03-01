@@ -10,6 +10,7 @@ import {
   BookOpen,
   Brain,
   Heart,
+  Users,
   TrendingUp,
   Settings,
   Info,
@@ -34,6 +35,7 @@ const navItems = [
   { href: '/reading', label: 'Reading Plans', icon: BookOpen },
   { href: '/memory', label: 'Scripture Memory', icon: Brain },
   { href: '/search', label: 'Bible Search', icon: Search },
+  { href: '/community', label: 'Prayer Wall', icon: Users },
   { href: '/gratitude', label: 'Gratitude Wall', icon: Heart },
   { href: '/growth', label: 'Growth Tracker', icon: TrendingUp },
 ];

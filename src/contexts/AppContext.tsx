@@ -9,6 +9,7 @@ import {
   WeeklyCheckIn,
   AppSettings,
   JournalEntry,
+  CommunityPrayer,
 } from '@/lib/types';
 import { generateId, getDateKey } from '@/lib/utils';
 import { useSync } from '@/contexts/SyncContext';
@@ -44,6 +45,11 @@ interface AppState {
   weeklyCheckIns: WeeklyCheckIn[];
   addWeeklyCheckIn: (checkIn: Omit<WeeklyCheckIn, 'id'>) => void;
 
+  communityPrayers: CommunityPrayer[];
+  addCommunityPrayer: (prayer: { name: string; request: string; category: Prayer['category']; isAnonymous: boolean }) => void;
+  togglePrayedFor: (id: string) => void;
+  deleteCommunityPrayer: (id: string) => void;
+
   prayerDates: string[];
   memoryPracticeDates: string[];
   visitDates: string[];
@@ -70,6 +76,7 @@ const KEYS = {
   memoryPracticeDates: 'dw-memory-practice-dates',
   journal: 'dw-journal',
   visitDates: 'dw-visit-dates',
+  communityPrayers: 'dw-community-prayers',
 } as const;
 
 function loadFromStorage<T>(key: string, fallback: T): T {
@@ -113,15 +120,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [memoryPracticeDates, setMemoryPracticeDates] = useState<string[]>([]);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [visitDates, setVisitDates] = useState<string[]>([]);
+  const [communityPrayers, setCommunityPrayers] = useState<CommunityPrayer[]>([]);
 
   // Ref always holds the latest state for the beforeunload flush
   const stateRef = useRef({
     settings, prayers, readingProgress, memoryVerses,
-    gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries, visitDates,
+    gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries, visitDates, communityPrayers,
   });
   stateRef.current = {
     settings, prayers, readingProgress, memoryVerses,
-    gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries, visitDates,
+    gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries, visitDates, communityPrayers,
   };
 
   const markSaved = useCallback(() => setLastSaved(new Date()), []);
@@ -148,6 +156,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         memoryPracticeDates: s.memoryPracticeDates,
         journalEntries: s.journalEntries,
         visitDates: s.visitDates,
+        communityPrayers: s.communityPrayers,
       });
     }, 2000);
   }, [user, pushToCloud]);
@@ -186,6 +195,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (data.memoryPracticeDates) { setMemoryPracticeDates(data.memoryPracticeDates as string[]); saveToStorage(KEYS.memoryPracticeDates, data.memoryPracticeDates); }
     if (data.journalEntries) { setJournalEntries(data.journalEntries as JournalEntry[]); saveToStorage(KEYS.journal, data.journalEntries); }
     if (data.visitDates) { setVisitDates(data.visitDates as string[]); saveToStorage(KEYS.visitDates, data.visitDates); }
+    if (data.communityPrayers) { setCommunityPrayers(data.communityPrayers as CommunityPrayer[]); saveToStorage(KEYS.communityPrayers, data.communityPrayers); }
     markSaved();
   }, [markSaved]);
 
@@ -201,6 +211,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setMemoryPracticeDates(loadFromStorage(KEYS.memoryPracticeDates, []));
     setJournalEntries(loadFromStorage(KEYS.journal, []));
     setVisitDates(loadFromStorage(KEYS.visitDates, []));
+    setCommunityPrayers(loadFromStorage(KEYS.communityPrayers, []));
     setIsHydrated(true);
   }, []);
 
@@ -218,6 +229,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       saveToStorage(KEYS.memoryPracticeDates, s.memoryPracticeDates);
       saveToStorage(KEYS.journal, s.journalEntries);
       saveToStorage(KEYS.visitDates, s.visitDates);
+      saveToStorage(KEYS.communityPrayers, s.communityPrayers);
     };
 
     const onVisChange = () => {
@@ -249,6 +261,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           case KEYS.memoryPracticeDates: setMemoryPracticeDates(val); break;
           case KEYS.journal: setJournalEntries(val); break;
           case KEYS.visitDates: setVisitDates(val); break;
+          case KEYS.communityPrayers: setCommunityPrayers(val); break;
         }
       } catch { /* ignore parse errors from other apps */ }
     };
@@ -513,6 +526,54 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [markSaved]);
 
+  const addCommunityPrayer = useCallback((prayer: { name: string; request: string; category: Prayer['category']; isAnonymous: boolean }) => {
+    const newPrayer: CommunityPrayer = {
+      id: generateId(),
+      name: prayer.isAnonymous ? 'Anonymous' : prayer.name,
+      request: prayer.request,
+      category: prayer.category,
+      isAnonymous: prayer.isAnonymous,
+      prayedCount: 0,
+      hasPrayed: false,
+      createdAt: new Date().toISOString(),
+    };
+    setCommunityPrayers(prev => {
+      const next = [newPrayer, ...prev];
+      saveToStorage(KEYS.communityPrayers, next);
+      markSaved();
+      return next;
+    });
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
+
+  const togglePrayedFor = useCallback((id: string) => {
+    setCommunityPrayers(prev => {
+      const next = prev.map(p => {
+        if (p.id !== id) return p;
+        const wasPrayed = p.hasPrayed;
+        return {
+          ...p,
+          hasPrayed: !wasPrayed,
+          prayedCount: wasPrayed ? Math.max(0, p.prayedCount - 1) : p.prayedCount + 1,
+        };
+      });
+      saveToStorage(KEYS.communityPrayers, next);
+      markSaved();
+      return next;
+    });
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
+
+  const deleteCommunityPrayer = useCallback((id: string) => {
+    setCommunityPrayers(prev => {
+      const next = prev.filter(p => p.id !== id);
+      saveToStorage(KEYS.communityPrayers, next);
+      markSaved();
+      return next;
+    });
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
+
   const exportData = useCallback(() => {
     return JSON.stringify({
       settings,
@@ -525,9 +586,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       memoryPracticeDates,
       journalEntries,
       visitDates,
+      communityPrayers,
       exportDate: new Date().toISOString(),
     }, null, 2);
-  }, [settings, prayers, readingProgress, memoryVerses, gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries, visitDates]);
+  }, [settings, prayers, readingProgress, memoryVerses, gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries, visitDates, communityPrayers]);
 
   const importData = useCallback((json: string): boolean => {
     try {
@@ -543,6 +605,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (data.memoryPracticeDates) { setMemoryPracticeDates(data.memoryPracticeDates); saveToStorage(KEYS.memoryPracticeDates, data.memoryPracticeDates); }
       if (data.journalEntries) { setJournalEntries(data.journalEntries); saveToStorage(KEYS.journal, data.journalEntries); }
       if (data.visitDates) { setVisitDates(data.visitDates); saveToStorage(KEYS.visitDates, data.visitDates); }
+      if (data.communityPrayers) { setCommunityPrayers(data.communityPrayers); saveToStorage(KEYS.communityPrayers, data.communityPrayers); }
       markSaved();
       return true;
     } catch {
@@ -575,6 +638,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       getJournalEntry,
       weeklyCheckIns,
       addWeeklyCheckIn,
+      communityPrayers,
+      addCommunityPrayer,
+      togglePrayedFor,
+      deleteCommunityPrayer,
       prayerDates,
       memoryPracticeDates,
       visitDates,
