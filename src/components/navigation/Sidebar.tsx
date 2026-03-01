@@ -15,7 +15,6 @@ import {
   Menu,
   X,
   PenLine,
-  Search,
   Library,
   CloudCheck,
   Cloud,
@@ -35,7 +34,6 @@ const navItems = [
   { href: '/prayer', labelKey: 'prayerJournal' as const, icon: BookHeart },
   { href: '/reading', labelKey: 'readingPlans' as const, icon: BookOpen },
   { href: '/bible', labelKey: 'theBible' as const, icon: Library },
-  { href: '/search', labelKey: 'bibleSearch' as const, icon: Search },
   { href: '/gratitude', labelKey: 'gratitudeWall' as const, icon: Heart },
   { href: '/growth', labelKey: 'growthTracker' as const, icon: TrendingUp },
 ];
