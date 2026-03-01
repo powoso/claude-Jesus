@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daily-walk-v5';
+const CACHE_NAME = 'daily-walk-v6';
 const OFFLINE_URL = '/devotional';
 
 // Pre-cache core app shell
@@ -12,6 +12,8 @@ const PRECACHE_URLS = [
   '/growth',
   '/settings',
   '/about',
+  '/bible',
+  '/search',
   '/favicon.svg',
   '/manifest.json',
 ];
@@ -36,6 +38,9 @@ self.addEventListener('activate', (event) => {
     )
   );
   self.clients.claim();
+
+  // Re-schedule reminder if previously configured
+  tryRestoreReminder();
 });
 
 self.addEventListener('fetch', (event) => {
@@ -45,10 +50,33 @@ self.addEventListener('fetch', (event) => {
   // Skip non-http(s) requests
   if (!event.request.url.startsWith('http')) return;
 
+  const url = new URL(event.request.url);
+
+  // Cache-first for static assets (JS, CSS, fonts, images)
+  if (
+    url.pathname.startsWith('/_next/static/') ||
+    url.pathname.startsWith('/fonts/') ||
+    url.pathname.match(/\.(js|css|woff2?|ttf|otf|png|jpg|jpeg|svg|ico|webp)$/)
+  ) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        }).catch(() => new Response('Offline', { status: 503 }));
+      })
+    );
+    return;
+  }
+
+  // Network-first for pages and API calls
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cache successful responses
         if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -58,7 +86,6 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // Serve from cache when offline
         return caches.match(event.request).then((cached) => {
           if (cached) return cached;
           // For navigation requests, serve the offline page
@@ -127,4 +154,14 @@ function scheduleNextReminder() {
     });
     scheduleNextReminder();
   }, delay);
+}
+
+// Try to restore reminder settings when SW activates
+function tryRestoreReminder() {
+  // Ask all clients for their reminder settings
+  self.clients.matchAll({ type: 'window' }).then((clients) => {
+    for (const client of clients) {
+      client.postMessage({ type: 'GET_REMINDER_SETTINGS' });
+    }
+  });
 }

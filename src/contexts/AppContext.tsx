@@ -47,6 +47,9 @@ interface AppState {
   weeklyCheckIns: WeeklyCheckIn[];
   addWeeklyCheckIn: (checkIn: Omit<WeeklyCheckIn, 'id'>) => void;
 
+  bibleChaptersRead: string[];
+  toggleChapterRead: (key: string) => void;
+
   prayerDates: string[];
   memoryPracticeDates: string[];
   visitDates: string[];
@@ -73,6 +76,7 @@ const KEYS = {
   memoryPracticeDates: 'dw-memory-practice-dates',
   journal: 'dw-journal',
   visitDates: 'dw-visit-dates',
+  bibleChaptersRead: 'dw-bible-chapters-read',
 } as const;
 
 function loadFromStorage<T>(key: string, fallback: T): T {
@@ -124,15 +128,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [memoryPracticeDates, setMemoryPracticeDates] = useState<string[]>([]);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [visitDates, setVisitDates] = useState<string[]>([]);
+  const [bibleChaptersRead, setBibleChaptersRead] = useState<string[]>([]);
 
   // Ref always holds the latest state for the beforeunload flush
   const stateRef = useRef({
     settings, prayers, readingProgress, memoryVerses,
-    gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries, visitDates,
+    gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries, visitDates, bibleChaptersRead,
   });
   stateRef.current = {
     settings, prayers, readingProgress, memoryVerses,
-    gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries, visitDates,
+    gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries, visitDates, bibleChaptersRead,
   };
 
   const markSaved = useCallback(() => setLastSaved(new Date()), []);
@@ -159,6 +164,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         memoryPracticeDates: s.memoryPracticeDates,
         journalEntries: s.journalEntries,
         visitDates: s.visitDates,
+        bibleChaptersRead: s.bibleChaptersRead,
       });
     }, 2000);
   }, [user, pushToCloud]);
@@ -197,6 +203,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (data.memoryPracticeDates) { setMemoryPracticeDates(data.memoryPracticeDates as string[]); saveToStorage(KEYS.memoryPracticeDates, data.memoryPracticeDates); }
     if (data.journalEntries) { setJournalEntries(data.journalEntries as JournalEntry[]); saveToStorage(KEYS.journal, data.journalEntries); }
     if (data.visitDates) { setVisitDates(data.visitDates as string[]); saveToStorage(KEYS.visitDates, data.visitDates); }
+    if (data.bibleChaptersRead) { setBibleChaptersRead(data.bibleChaptersRead as string[]); saveToStorage(KEYS.bibleChaptersRead, data.bibleChaptersRead); }
     markSaved();
   }, [markSaved]);
 
@@ -212,6 +219,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setMemoryPracticeDates(loadFromStorage(KEYS.memoryPracticeDates, []));
     setJournalEntries(loadFromStorage(KEYS.journal, []));
     setVisitDates(loadFromStorage(KEYS.visitDates, []));
+    setBibleChaptersRead(loadFromStorage(KEYS.bibleChaptersRead, []));
     setIsHydrated(true);
   }, []);
 
@@ -229,6 +237,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       saveToStorage(KEYS.memoryPracticeDates, s.memoryPracticeDates);
       saveToStorage(KEYS.journal, s.journalEntries);
       saveToStorage(KEYS.visitDates, s.visitDates);
+      saveToStorage(KEYS.bibleChaptersRead, s.bibleChaptersRead);
     };
 
     const onVisChange = () => {
@@ -260,6 +269,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           case KEYS.memoryPracticeDates: setMemoryPracticeDates(val); break;
           case KEYS.journal: setJournalEntries(val); break;
           case KEYS.visitDates: setVisitDates(val); break;
+          case KEYS.bibleChaptersRead: setBibleChaptersRead(val); break;
         }
       } catch { /* ignore parse errors from other apps */ }
     };
@@ -568,6 +578,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [markSaved]);
 
+  const toggleChapterRead = useCallback((key: string) => {
+    setBibleChaptersRead(prev => {
+      const next = prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key];
+      saveToStorage(KEYS.bibleChaptersRead, next);
+      markSaved();
+      return next;
+    });
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
+
   const exportData = useCallback(() => {
     return JSON.stringify({
       settings,
@@ -580,9 +600,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       memoryPracticeDates,
       journalEntries,
       visitDates,
+      bibleChaptersRead,
       exportDate: new Date().toISOString(),
     }, null, 2);
-  }, [settings, prayers, readingProgress, memoryVerses, gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries, visitDates]);
+  }, [settings, prayers, readingProgress, memoryVerses, gratitudeEntries, weeklyCheckIns, prayerDates, memoryPracticeDates, journalEntries, visitDates, bibleChaptersRead]);
 
   const importData = useCallback((json: string): boolean => {
     try {
@@ -598,6 +619,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (data.memoryPracticeDates) { setMemoryPracticeDates(data.memoryPracticeDates); saveToStorage(KEYS.memoryPracticeDates, data.memoryPracticeDates); }
       if (data.journalEntries) { setJournalEntries(data.journalEntries); saveToStorage(KEYS.journal, data.journalEntries); }
       if (data.visitDates) { setVisitDates(data.visitDates); saveToStorage(KEYS.visitDates, data.visitDates); }
+      if (data.bibleChaptersRead) { setBibleChaptersRead(data.bibleChaptersRead); saveToStorage(KEYS.bibleChaptersRead, data.bibleChaptersRead); }
       markSaved();
       return true;
     } catch {
@@ -633,6 +655,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       getJournalEntry,
       weeklyCheckIns,
       addWeeklyCheckIn,
+      bibleChaptersRead,
+      toggleChapterRead,
       prayerDates,
       memoryPracticeDates,
       visitDates,

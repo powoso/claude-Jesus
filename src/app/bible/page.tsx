@@ -14,6 +14,7 @@ import {
   X,
   Bookmark,
   ArrowUp,
+  CheckCircle2,
 } from 'lucide-react';
 import { AppLayout } from '@/components/navigation/AppLayout';
 import { Card } from '@/components/ui/Card';
@@ -21,6 +22,7 @@ import { Button } from '@/components/ui/Button';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Badge } from '@/components/ui/Badge';
 import { useToast } from '@/components/ui/Toast';
+import { useApp } from '@/contexts/AppContext';
 import { copyToClipboard } from '@/lib/utils';
 import {
   bibleBooks,
@@ -96,9 +98,17 @@ function saveBookmarks(bookmarks: string[]): void {
   } catch { /* ignore */ }
 }
 
+const TOTAL_CHAPTERS = 1189;
+
+function getChapterKey(book: string, chapter: number): string {
+  return `${book}-${chapter}`;
+}
+
 export default function BiblePage() {
   const { showToast } = useToast();
+  const { bibleChaptersRead, toggleChapterRead } = useApp();
   const contentRef = useRef<HTMLDivElement>(null);
+  const chaptersReadSet = new Set(bibleChaptersRead);
 
   // State
   const [selectedBook, setSelectedBook] = useState('Genesis');
@@ -271,6 +281,24 @@ export default function BiblePage() {
         subtitle="Read God's Word — all 66 books, 1,189 chapters"
         icon={<Library size={28} />}
       />
+
+      {/* Reading Progress */}
+      {bibleChaptersRead.length > 0 && (
+        <Card className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-medium text-[var(--text-secondary)]">Reading Progress</span>
+            <span className="text-xs font-bold text-[var(--accent)]">
+              {bibleChaptersRead.length} / {TOTAL_CHAPTERS} chapters ({Math.round((bibleChaptersRead.length / TOTAL_CHAPTERS) * 100)}%)
+            </span>
+          </div>
+          <div className="w-full h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[var(--accent)] rounded-full transition-all duration-500"
+              style={{ width: `${(bibleChaptersRead.length / TOTAL_CHAPTERS) * 100}%` }}
+            />
+          </div>
+        </Card>
+      )}
 
       {/* Top Controls */}
       <Card className="mb-4">
@@ -459,19 +487,24 @@ export default function BiblePage() {
                 </button>
               </div>
               <div className="grid grid-cols-10 sm:grid-cols-15 gap-1.5 max-h-64 overflow-y-auto">
-                {Array.from({ length: currentBook.chapters }, (_, i) => i + 1).map(ch => (
-                  <button
-                    key={ch}
-                    onClick={() => selectChapter(ch)}
-                    className={`w-full aspect-square flex items-center justify-center rounded-lg text-xs font-medium transition-all border ${
-                      ch === selectedChapter
-                        ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
-                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
-                    }`}
-                  >
-                    {ch}
-                  </button>
-                ))}
+                {Array.from({ length: currentBook.chapters }, (_, i) => i + 1).map(ch => {
+                  const isRead = chaptersReadSet.has(getChapterKey(selectedBook, ch));
+                  return (
+                    <button
+                      key={ch}
+                      onClick={() => selectChapter(ch)}
+                      className={`w-full aspect-square flex items-center justify-center rounded-lg text-xs font-medium transition-all border relative ${
+                        ch === selectedChapter
+                          ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                          : isRead
+                            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                            : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
+                      }`}
+                    >
+                      {ch}
+                    </button>
+                  );
+                })}
               </div>
             </Card>
           </motion.div>
@@ -530,6 +563,27 @@ export default function BiblePage() {
                 )}
               </div>
             </Card>
+
+            {/* Mark as read */}
+            {(() => {
+              const key = getChapterKey(selectedBook, selectedChapter);
+              const isRead = chaptersReadSet.has(key);
+              return (
+                <div className="flex justify-center mb-4">
+                  <Button
+                    variant={isRead ? 'primary' : 'secondary'}
+                    size="sm"
+                    onClick={() => {
+                      toggleChapterRead(key);
+                      if (!isRead) showToast(`${selectedBook} ${selectedChapter} marked as read`, 'success');
+                    }}
+                  >
+                    <CheckCircle2 size={14} />
+                    {isRead ? 'Read' : 'Mark as read'}
+                  </Button>
+                </div>
+              );
+            })()}
 
             {/* Navigation */}
             <div className="flex items-center justify-between gap-3 mb-8">
