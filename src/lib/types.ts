@@ -104,18 +104,6 @@ export interface WeeklyCheckIn {
   };
 }
 
-export interface CommunityPrayer {
-  id: string;
-  name: string;
-  request: string;
-  category: PrayerCategory;
-  isAnonymous: boolean;
-  prayedCount: number;
-  hasPrayed: boolean;
-  createdAt: string;
-  isSeeded?: boolean;
-}
-
 export interface AppSettings {
   darkMode: boolean;
   fontSize: 'small' | 'medium' | 'large';
