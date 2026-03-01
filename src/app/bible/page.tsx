@@ -76,28 +76,31 @@ interface LastRead {
 }
 
 // Bump this version to invalidate all cached entries (e.g. after fixing HTML stripping)
-const CACHE_VERSION = 4;
+const CACHE_VERSION = 5;
 
 function getCacheKey(book: string, chapter: number, translation: string): string {
   return `dw-bible-v${CACHE_VERSION}-${translation}-${book}-${chapter}`;
 }
 
 /** Strip HTML tags and section headings from bolls.life verse text.
- *  bolls.life embeds section headings as plain text before a <br/> tag,
- *  e.g. "The Beginning<br/>In the beginning God created..."
+ *  bolls.life embeds section headings as HTML heading elements (e.g. <h3>The Beginning</h3>)
+ *  or as plain text before a <br/> tag (e.g. "The Beginning<br/>In the beginning...")
  */
 function stripHtml(html: string): string {
-  // First, remove plain-text section headings before <br/> tags.
-  // These headings are short (under ~80 chars), have no sentence-ending punctuation,
+  // Remove HTML heading elements (h1-h6) and their content — these are section headings
+  // e.g. <h3>The Beginning</h3> or <h4 class="s1">The Creation</h4>
+  let cleaned = html.replace(/<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi, '');
+
+  // Remove plain-text section headings before <br/> tags (fallback for non-tagged headings).
+  // These are short (under ~80 chars), have no sentence-ending punctuation,
   // and appear at the very start of the verse text.
-  let cleaned = html.replace(/^([^<]{1,80})<br\s*\/?>/i, (match, heading) => {
-    // If the text before <br/> looks like a heading (no period/question mark/exclamation),
-    // remove it; otherwise keep it
+  cleaned = cleaned.replace(/^([^<]{1,80})<br\s*\/?>/i, (match, heading) => {
     if (!/[.?!]$/.test(heading.trim())) {
       return '';
     }
     return match;
   });
+
   // Strip all remaining HTML tags
   cleaned = cleaned
     .replace(/<br\s*\/?>/gi, ' ')
