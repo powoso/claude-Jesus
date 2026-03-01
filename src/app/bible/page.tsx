@@ -76,32 +76,30 @@ interface LastRead {
 }
 
 // Bump this version to invalidate all cached entries (e.g. after fixing HTML stripping)
-const CACHE_VERSION = 3;
+const CACHE_VERSION = 4;
 
 function getCacheKey(book: string, chapter: number, translation: string): string {
   return `dw-bible-v${CACHE_VERSION}-${translation}-${book}-${chapter}`;
 }
 
-/** Strip HTML tags and section headings from bolls.life verse text */
+/** Strip HTML tags and section headings from bolls.life verse text.
+ *  bolls.life embeds section headings as plain text before a <br/> tag,
+ *  e.g. "The Beginning<br/>In the beginning God created..."
+ */
 function stripHtml(html: string): string {
-  if (typeof window !== 'undefined') {
-    // Use DOMParser for robust HTML handling
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    // Remove all heading elements (h1-h6)
-    doc.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el => el.remove());
-    // Remove USFM section headings, titles, and editorial content by class
-    doc.querySelectorAll('[class]').forEach(el => {
-      const cls = el.className;
-      if (/\b(s\d*|r|d|ms\d*|mr|mt\d*|qa|qc|heading|title)\b/.test(cls)) {
-        el.remove();
-      }
-    });
-    return (doc.body.textContent || '').replace(/\s+/g, ' ').trim();
-  }
-  // SSR fallback: regex-based stripping
-  return html
-    .replace(/<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi, '')
-    .replace(/<[a-z]+[^>]*\bclass="[^"]*\b(?:s\d*|r|d|ms\d*|mr|mt\d*|qa|qc|heading|title)\b[^"]*"[^>]*>[\s\S]*?<\/[a-z]+>/gi, '')
+  // First, remove plain-text section headings before <br/> tags.
+  // These headings are short (under ~80 chars), have no sentence-ending punctuation,
+  // and appear at the very start of the verse text.
+  let cleaned = html.replace(/^([^<]{1,80})<br\s*\/?>/i, (match, heading) => {
+    // If the text before <br/> looks like a heading (no period/question mark/exclamation),
+    // remove it; otherwise keep it
+    if (!/[.?!]$/.test(heading.trim())) {
+      return '';
+    }
+    return match;
+  });
+  // Strip all remaining HTML tags
+  cleaned = cleaned
     .replace(/<br\s*\/?>/gi, ' ')
     .replace(/<[^>]*>/g, '')
     .replace(/&nbsp;/g, ' ')
@@ -112,6 +110,7 @@ function stripHtml(html: string): string {
     .replace(/&#39;/g, "'")
     .replace(/\s+/g, ' ')
     .trim();
+  return cleaned;
 }
 
 function getLastRead(): LastRead {
