@@ -4,6 +4,7 @@ import { SyncProvider } from '@/contexts/SyncContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import { ServiceWorkerRegistrar } from '@/components/ui/ServiceWorkerRegistrar';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
+import { Analytics } from '@vercel/analytics/next';
 
 import './globals.css';
 
@@ -147,6 +148,7 @@ export default function RootLayout({
             </ToastProvider>
           </AppProvider>
         </SyncProvider>
+        <Analytics />
       </body>
     </html>
   );
