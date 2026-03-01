@@ -65,14 +65,6 @@ export default function SuggestionsPage() {
     setSuggestions(updated);
     localStorage.setItem('daily-walk-suggestions', JSON.stringify(updated));
 
-    // Open email client with pre-filled content
-    const catLabel = categories.find(c => c.id === category)?.label || 'Feedback';
-    const subject = encodeURIComponent(`Daily Walk ${catLabel}`);
-    const body = encodeURIComponent(
-      `Category: ${catLabel}\n\n${message.trim()}${email.trim() ? `\n\nFrom: ${email.trim()}` : ''}`
-    );
-    window.open(`mailto:maranatha11111@proton.me?subject=${subject}&body=${body}`, '_self');
-
     setMessage('');
     setEmail('');
     setSubmitted(true);
@@ -111,6 +103,28 @@ export default function SuggestionsPage() {
             Or simply want to share how God is using this app in your life? We&apos;d love to hear
             from you. Every piece of feedback helps us serve you and the body of Christ better.
           </p>
+        </Card>
+
+        {/* Contact Email */}
+        <Card>
+          <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)] mb-3">
+            Get in Touch
+          </h2>
+          <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-4">
+            You can reach us directly by email. We read every message and will do our best to respond.
+          </p>
+          <a
+            href="mailto:maranatha11111@proton.me"
+            className="flex items-center gap-3 p-4 rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 hover:bg-[var(--accent)]/15 transition-all duration-200 group"
+          >
+            <div className="w-10 h-10 rounded-full bg-[var(--accent)] flex items-center justify-center flex-shrink-0">
+              <Mail size={18} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-[var(--text-primary)]">Email Us</p>
+              <p className="text-xs text-[var(--text-muted)]">maranatha11111@proton.me</p>
+            </div>
+          </a>
         </Card>
 
         {/* Form */}
