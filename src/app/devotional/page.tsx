@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft, ChevronRight, Share2, Check, Home,
-  BookOpen, Flame, Brain, BookHeart, PenLine, Save
+  BookOpen, Flame, BookHeart, PenLine, Save
 } from 'lucide-react';
 import { AppLayout } from '@/components/navigation/AppLayout';
 import { Card } from '@/components/ui/Card';
@@ -16,7 +16,7 @@ import { dailyVerses, devotionalReflections } from '@/data/verses';
 import { getDayOfYear, formatDate, copyToClipboard, getStreakCount, getDateKey } from '@/lib/utils';
 
 export default function DevotionalPage() {
-  const { prayerDates, memoryPracticeDates, readingProgress, saveJournalEntry, getJournalEntry, visitDates, recordVisit } = useApp();
+  const { prayerDates, readingProgress, saveJournalEntry, getJournalEntry, visitDates, recordVisit } = useApp();
   const { showToast } = useToast();
   const today = new Date();
   const [dayOffset, setDayOffset] = useState(0);
@@ -66,7 +66,6 @@ export default function DevotionalPage() {
   // Streak calculations
   const walkStreak = getStreakCount(visitDates);
   const prayerStreak = getStreakCount(prayerDates);
-  const memoryStreak = getStreakCount(memoryPracticeDates);
   const readingStreak = useMemo(() => {
     const allDates: string[] = [];
     readingProgress.forEach(p => {
@@ -83,7 +82,6 @@ export default function DevotionalPage() {
   const streaks = [
     { icon: <BookHeart size={16} />, label: 'Prayer', count: prayerStreak },
     { icon: <BookOpen size={16} />, label: 'Reading', count: readingStreak },
-    { icon: <Brain size={16} />, label: 'Memory', count: memoryStreak },
   ];
 
   return (
