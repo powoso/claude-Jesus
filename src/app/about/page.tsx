@@ -129,10 +129,21 @@ export default function AboutPage() {
 
         <Card>
           <h3 className="font-heading text-lg font-semibold text-[var(--text-primary)] mb-3">Privacy</h3>
+          <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-3">
+            By default, all your data is stored locally on your device using browser localStorage. Your prayers,
+            reflections, and spiritual journey remain completely private between you and God.
+          </p>
+          <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-3">
+            If you choose to enable Cloud Sync, your data is securely transmitted to Google Firebase servers so
+            you can access it across devices. Cloud Sync is entirely optional — you are never required to create
+            an account or send data off your device.
+          </p>
           <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-            All your data is stored locally on your device using browser localStorage. Nothing is sent to any
-            server. Your prayers, reflections, and spiritual journey remain completely private between you and God.
-            You can export your data anytime as a JSON backup from the Settings page.
+            You can export your data anytime as a JSON backup from the Settings page. For full details, see
+            our{' '}
+            <Link href="/privacy" className="text-[var(--accent)] underline underline-offset-2 hover:opacity-80">
+              Privacy Policy
+            </Link>.
           </p>
         </Card>
 

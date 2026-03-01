@@ -8,20 +8,20 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import Link from 'next/link';
 
 export default function PrivacyPolicyPage() {
-  const lastUpdated = 'February 28, 2026';
+  const lastUpdated = 'March 1, 2026';
 
   const sections = [
     {
       icon: <Eye size={18} className="text-[var(--accent)]" />,
       title: 'Information We Collect',
       content:
-        'Daily Walk does not collect, transmit, or store any personal information on external servers. All data you enter into the app — including devotional reflections, prayer entries, scripture memory progress, gratitude entries, and growth check-ins — is stored exclusively on your device using your browser\'s localStorage.',
+        'By default, Daily Walk does not collect, transmit, or store any personal information on external servers. All data you enter — including devotional reflections, prayer entries, scripture memory progress, gratitude entries, and growth check-ins — is stored on your device using your browser\'s localStorage. If you enable Cloud Sync, you provide an email address to create an account, and your app data is transmitted to Google Firebase (Firestore) so you can access it across devices.',
     },
     {
       icon: <Lock size={18} className="text-[var(--accent)]" />,
       title: 'Data Storage & Privacy',
       content:
-        'Your data never leaves your device. We have no servers, no databases, and no analytics tracking. We cannot access, view, or recover your data. Your prayers, reflections, and spiritual journey remain completely private — between you and God.',
+        'Without Cloud Sync, your data never leaves your device. We run no analytics tracking and show no ads. If you enable Cloud Sync, your data is stored in Google Firebase (Firestore) under your authenticated account. Firebase data is protected by Google\'s security infrastructure. You can disable Cloud Sync and delete your cloud data at any time from the Settings page.',
     },
     {
       icon: <Database size={18} className="text-[var(--accent)]" />,
@@ -33,7 +33,7 @@ export default function PrivacyPolicyPage() {
       icon: <Trash2 size={18} className="text-[var(--accent)]" />,
       title: 'Data Deletion',
       content:
-        'Since all data is stored locally on your device, you can delete it at any time by clearing your browser\'s localStorage or uninstalling the app. We do not retain any copies of your data.',
+        'Local data can be deleted at any time by clearing your browser\'s localStorage or uninstalling the app. If you have enabled Cloud Sync, you can sign out and delete your cloud data from the Settings page. Once deleted, we do not retain any copies of your data.',
     },
   ];
 
@@ -65,8 +65,9 @@ export default function PrivacyPolicyPage() {
           <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
             Daily Walk is built on a simple principle:{' '}
             <strong className="text-[var(--text-primary)]">your spiritual life is between you and God</strong>.
-            We designed this app with complete privacy at its core. We collect no data, run no analytics,
-            and show no advertisements. Your devotional journey is sacred and private.
+            We designed this app with privacy at its core. By default, all data stays on your device. We run
+            no analytics and show no advertisements. If you choose to enable the optional Cloud Sync feature,
+            your data is securely stored on Google Firebase — but that choice is always yours.
           </p>
         </Card>
 
@@ -100,6 +101,14 @@ export default function PrivacyPolicyPage() {
             <li className="flex items-start gap-2">
               <span className="text-[var(--accent)] mt-1">•</span>
               <span>
+                <strong className="text-[var(--text-primary)]">Google Firebase</strong> — used for optional Cloud Sync
+                (Authentication and Firestore). Only active if you choose to create an account and enable sync.
+                Data is governed by Google&apos;s privacy policy.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-[var(--accent)] mt-1">•</span>
+              <span>
                 <strong className="text-[var(--text-primary)]">Google Fonts</strong> — to load the Inter and Lora
                 typefaces. Google may collect basic usage data as described in their privacy policy.
               </span>
@@ -112,9 +121,9 @@ export default function PrivacyPolicyPage() {
             Children&apos;s Privacy
           </h3>
           <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-            Daily Walk does not knowingly collect any personal information from children under 13. Since all data
-            is stored locally on the device and we do not collect any information, there is no risk of unauthorized
-            data collection from minors.
+            Daily Walk does not knowingly collect any personal information from children under 13. By default,
+            all data is stored locally on the device. The optional Cloud Sync feature requires an email address
+            to create an account — parents or guardians should supervise this process for minors.
           </p>
         </Card>
 
@@ -124,7 +133,7 @@ export default function PrivacyPolicyPage() {
           </h3>
           <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
             If we ever update this privacy policy, changes will be reflected on this page with an updated date.
-            Our core commitment to zero data collection will not change.
+            Our core commitment to privacy-first, local-by-default data storage will not change.
           </p>
         </Card>
 
