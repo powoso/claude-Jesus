@@ -17,6 +17,7 @@ import {
   X,
   PenLine,
   Search,
+  Library,
   CloudCheck,
   Cloud,
   CloudOff,
@@ -29,6 +30,7 @@ import { useSync } from '@/contexts/SyncContext';
 
 const navItems = [
   { href: '/devotional', label: 'Devotional', icon: Home },
+  { href: '/bible', label: 'The Bible', icon: Library },
   { href: '/journal', label: 'Journal', icon: PenLine },
   { href: '/prayer', label: 'Prayer Journal', icon: BookHeart },
   { href: '/reading', label: 'Reading Plans', icon: BookOpen },
