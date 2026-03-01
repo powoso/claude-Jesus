@@ -1,0 +1,8 @@
+# Daily Walk — daily-walk.com / daily-walk.app
+User-agent: *
+Allow: /
+Disallow: /settings
+Disallow: /api/
+
+Sitemap: https://daily-walk.com/sitemap.xml
+Sitemap: https://daily-walk.app/sitemap.xml
