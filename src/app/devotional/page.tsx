@@ -3,8 +3,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ChevronLeft, ChevronRight, Share2, Check, Home,
-  BookOpen, Flame, BookHeart, PenLine, Save
+  ChevronLeft, ChevronRight, Share2, Home,
+  BookOpen, Flame, BookHeart
 } from 'lucide-react';
 import { AppLayout } from '@/components/navigation/AppLayout';
 import { Card } from '@/components/ui/Card';
@@ -13,10 +13,10 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { useApp } from '@/contexts/AppContext';
 import { useToast } from '@/components/ui/Toast';
 import { dailyVerses, devotionalReflections } from '@/data/verses';
-import { getDayOfYear, formatDate, copyToClipboard, getStreakCount, getDateKey } from '@/lib/utils';
+import { getDayOfYear, formatDate, copyToClipboard, getStreakCount } from '@/lib/utils';
 
 export default function DevotionalPage() {
-  const { prayerDates, readingProgress, saveJournalEntry, getJournalEntry, visitDates, recordVisit, isHydrated } = useApp();
+  const { prayerDates, readingProgress, visitDates, recordVisit } = useApp();
   const { showToast } = useToast();
   const today = new Date();
   const [dayOffset, setDayOffset] = useState(0);
@@ -31,31 +31,10 @@ export default function DevotionalPage() {
   const verseIndex = ((dayOfYear - 1) % dailyVerses.length + dailyVerses.length) % dailyVerses.length;
   const verse = dailyVerses[verseIndex];
   const questions = devotionalReflections[verse.theme] || devotionalReflections['Faith'];
-  const dateKey = getDateKey(currentDate);
-
-  // Journal state
-  const existingEntry = getJournalEntry(dateKey);
-  const [journalText, setJournalText] = useState(existingEntry?.text || '');
-  const [journalDirty, setJournalDirty] = useState(false);
-
-  // Sync journal text when navigating days
-  useEffect(() => {
-    const entry = getJournalEntry(dateKey);
-    setJournalText(entry?.text || '');
-    setJournalDirty(false);
-  }, [dateKey, getJournalEntry]);
-
   const handleShare = async () => {
     const text = `"${verse.text}" — ${verse.reference}\n\nFrom Daily Walk Devotional`;
     await copyToClipboard(text);
     showToast('Verse copied to clipboard!');
-  };
-
-  const handleSaveJournal = () => {
-    if (!journalText.trim()) return;
-    saveJournalEntry(dateKey, journalText.trim(), verse.id);
-    setJournalDirty(false);
-    showToast('Journal entry saved');
   };
 
   // Record today's visit
@@ -242,39 +221,6 @@ export default function DevotionalPage() {
                 </motion.div>
               ))}
             </div>
-          </Card>
-
-          {/* Personal Journal */}
-          <Card>
-            <div className="flex items-center gap-2 mb-4">
-              <PenLine size={18} className="text-[var(--accent)]" />
-              <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
-                My Journal
-              </h2>
-              {isHydrated && existingEntry && !journalDirty && (
-                <span className="text-xs text-[var(--text-muted)] ml-auto">Saved</span>
-              )}
-            </div>
-            <textarea
-              value={journalText}
-              onChange={(e) => { setJournalText(e.target.value); setJournalDirty(true); }}
-              placeholder="Write your thoughts, prayers, and reflections on today's verse..."
-              rows={5}
-              className="w-full px-4 py-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none font-scripture text-sm leading-relaxed"
-              aria-label="Journal entry"
-            />
-            {journalDirty && journalText.trim() && (
-              <motion.div
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-3 flex justify-end"
-              >
-                <Button size="sm" onClick={handleSaveJournal}>
-                  <Save size={14} />
-                  Save Entry
-                </Button>
-              </motion.div>
-            )}
           </Card>
 
           {/* Encouragement */}
