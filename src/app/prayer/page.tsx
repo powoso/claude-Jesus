@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/Badge';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { StreakBadge } from '@/components/ui/StreakBadge';
+import { CalendarPicker } from '@/components/ui/CalendarPicker';
 import { useApp } from '@/contexts/AppContext';
 import { useToast } from '@/components/ui/Toast';
 import { PrayerCategory } from '@/lib/types';
@@ -50,6 +51,8 @@ export default function PrayerPage() {
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editCategory, setEditCategory] = useState<PrayerCategory>('Petition');
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [filterDate, setFilterDate] = useState<Date | null>(null);
 
   const streak = getStreakCount(prayerDates);
 
@@ -58,13 +61,19 @@ export default function PrayerPage() {
       if (view === 'active' && p.isAnswered) return false;
       if (view === 'answered' && !p.isAnswered) return false;
       if (filterCategory !== 'all' && p.category !== filterCategory) return false;
+      if (filterDate) {
+        const prayerDate = new Date(p.date);
+        if (prayerDate.getFullYear() !== filterDate.getFullYear() ||
+          prayerDate.getMonth() !== filterDate.getMonth() ||
+          prayerDate.getDate() !== filterDate.getDate()) return false;
+      }
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         return p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q);
       }
       return true;
     });
-  }, [prayers, view, filterCategory, searchQuery]);
+  }, [prayers, view, filterCategory, searchQuery, filterDate]);
 
   const handleAddPrayer = () => {
     if (!newTitle.trim()) return;
@@ -152,17 +161,30 @@ export default function PrayerPage() {
       </div>
 
       {/* Search & Filter */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <div className="flex-1 relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-          <input
-            type="text"
-            placeholder="Search prayers..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-            aria-label="Search prayers"
-          />
+      <div className="flex flex-col sm:flex-row gap-3 mb-3">
+        <div className="flex-1 flex gap-2">
+          <div className="relative flex-1">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+            <input
+              type="text"
+              placeholder="Search prayers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              aria-label="Search prayers"
+            />
+          </div>
+          <button
+            onClick={() => setCalendarOpen(true)}
+            className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl border transition-all ${
+              filterDate
+                ? 'bg-[var(--accent)]/10 border-[var(--accent)]/30 text-[var(--accent)]'
+                : 'bg-[var(--bg-secondary)] border-[var(--border-color)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+            }`}
+            aria-label="Filter by date"
+          >
+            <Calendar size={16} />
+          </button>
         </div>
         <Select
           options={[{ value: 'all', label: 'All Categories' }, ...categories.map(c => ({ value: c, label: c }))]}
@@ -172,6 +194,27 @@ export default function PrayerPage() {
           aria-label="Filter by category"
         />
       </div>
+      {filterDate && (
+        <div className="flex items-center gap-2 mb-6">
+          <span className="text-xs text-[var(--text-muted)]">
+            Showing prayers from {filterDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          </span>
+          <button
+            onClick={() => setFilterDate(null)}
+            className="text-xs text-[var(--accent)] hover:underline"
+          >
+            Show all
+          </button>
+        </div>
+      )}
+      {!filterDate && <div className="mb-6" />}
+
+      <CalendarPicker
+        isOpen={calendarOpen}
+        onClose={() => setCalendarOpen(false)}
+        selectedDate={filterDate || new Date()}
+        onSelectDate={(date) => setFilterDate(date)}
+      />
 
       {/* Prayers List */}
       {filteredPrayers.length === 0 ? (

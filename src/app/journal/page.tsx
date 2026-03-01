@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { CalendarPicker } from '@/components/ui/CalendarPicker';
 import { useApp } from '@/contexts/AppContext';
 import { useToast } from '@/components/ui/Toast';
 import { dailyVerses } from '@/data/verses';
@@ -62,11 +63,21 @@ export default function JournalPage() {
   const [showNewEntry, setShowNewEntry] = useState(false);
   const [newText, setNewText] = useState('');
   const [newMood, setNewMood] = useState<JournalMood | undefined>(undefined);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [filterDate, setFilterDate] = useState<Date | null>(null);
 
   const sortedEntries = useMemo(() => {
     let entries = [...journalEntries].sort((a, b) =>
       new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
+    if (filterDate) {
+      entries = entries.filter(e => {
+        const entryDate = new Date(e.updatedAt);
+        return entryDate.getFullYear() === filterDate.getFullYear() &&
+          entryDate.getMonth() === filterDate.getMonth() &&
+          entryDate.getDate() === filterDate.getDate();
+      });
+    }
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       entries = entries.filter(e => {
@@ -81,7 +92,7 @@ export default function JournalPage() {
       });
     }
     return entries;
-  }, [journalEntries, searchQuery]);
+  }, [journalEntries, searchQuery, filterDate]);
 
   // Group entries by month
   const groupedEntries = useMemo(() => {
@@ -235,22 +246,55 @@ export default function JournalPage() {
         )}
       </AnimatePresence>
 
-      {/* Search */}
+      {/* Search & Calendar Filter */}
       {totalEntries > 0 && (
-        <div className="mb-6">
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-            <input
-              type="text"
-              placeholder="Search journal entries..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-              aria-label="Search journal entries"
-            />
+        <div className="mb-6 space-y-3">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+              <input
+                type="text"
+                placeholder="Search journal entries..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                aria-label="Search journal entries"
+              />
+            </div>
+            <button
+              onClick={() => setCalendarOpen(true)}
+              className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl border transition-all ${
+                filterDate
+                  ? 'bg-[var(--accent)]/10 border-[var(--accent)]/30 text-[var(--accent)]'
+                  : 'bg-[var(--bg-secondary)] border-[var(--border-color)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+              }`}
+              aria-label="Filter by date"
+            >
+              <Calendar size={16} />
+            </button>
           </div>
+          {filterDate && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-[var(--text-muted)]">
+                Showing entries from {filterDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              </span>
+              <button
+                onClick={() => setFilterDate(null)}
+                className="text-xs text-[var(--accent)] hover:underline"
+              >
+                Show all
+              </button>
+            </div>
+          )}
         </div>
       )}
+
+      <CalendarPicker
+        isOpen={calendarOpen}
+        onClose={() => setCalendarOpen(false)}
+        selectedDate={filterDate || new Date()}
+        onSelectDate={(date) => setFilterDate(date)}
+      />
 
       {/* Entries */}
       {sortedEntries.filter(e => e.text.trim()).length === 0 ? (
