@@ -17,20 +17,21 @@ import { useToast } from '@/components/ui/Toast';
 import { dailyVerses } from '@/data/verses';
 import { getDayOfYear, formatShortDate } from '@/lib/utils';
 import { JournalEntry, JournalMood } from '@/lib/types';
+import { useTranslation, getLocale } from '@/lib/i18n';
 
-const MOODS: { value: JournalMood; emoji: string; label: string }[] = [
-  { value: 'joyful', emoji: '😊', label: 'Joyful' },
-  { value: 'grateful', emoji: '🙏', label: 'Grateful' },
-  { value: 'peaceful', emoji: '☮️', label: 'Peaceful' },
-  { value: 'hopeful', emoji: '🌅', label: 'Hopeful' },
-  { value: 'reflective', emoji: '💭', label: 'Reflective' },
-  { value: 'struggling', emoji: '💪', label: 'Struggling' },
-  { value: 'seeking', emoji: '🔍', label: 'Seeking' },
+const MOODS: { value: JournalMood; emoji: string }[] = [
+  { value: 'joyful', emoji: '😊' },
+  { value: 'grateful', emoji: '🙏' },
+  { value: 'peaceful', emoji: '☮️' },
+  { value: 'hopeful', emoji: '🌅' },
+  { value: 'reflective', emoji: '💭' },
+  { value: 'struggling', emoji: '💪' },
+  { value: 'seeking', emoji: '🔍' },
 ];
 
-function getMoodDisplay(mood?: JournalMood) {
+function getMoodEmoji(mood?: JournalMood) {
   if (!mood) return null;
-  return MOODS.find(m => m.value === mood) || null;
+  return MOODS.find(m => m.value === mood)?.emoji || null;
 }
 
 function getVerseById(id: number) {
@@ -55,6 +56,8 @@ function getTodaysVerse() {
 export default function JournalPage() {
   const { journalEntries, addJournalEntry, updateJournalEntry, deleteJournalEntry, isHydrated } = useApp();
   const { showToast } = useToast();
+  const { t, lang } = useTranslation();
+  const j = t.journal;
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -65,6 +68,21 @@ export default function JournalPage() {
   const [newMood, setNewMood] = useState<JournalMood | undefined>(undefined);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [filterDate, setFilterDate] = useState<Date | null>(null);
+
+  const moodLabels: Record<JournalMood, string> = {
+    joyful: j.moodJoyful,
+    grateful: j.moodGrateful,
+    peaceful: j.moodPeaceful,
+    hopeful: j.moodHopeful,
+    reflective: j.moodReflective,
+    struggling: j.moodStruggling,
+    seeking: j.moodSeeking,
+  };
+
+  function getMoodLabel(mood?: JournalMood) {
+    if (!mood) return null;
+    return moodLabels[mood] || null;
+  }
 
   const sortedEntries = useMemo(() => {
     let entries = [...journalEntries].sort((a, b) =>
@@ -82,17 +100,17 @@ export default function JournalPage() {
       const q = searchQuery.toLowerCase();
       entries = entries.filter(e => {
         const verse = getVerseById(e.verseId);
-        const moodDisplay = getMoodDisplay(e.mood);
+        const moodLabel = getMoodLabel(e.mood);
         return (
           e.text.toLowerCase().includes(q) ||
           verse?.reference.toLowerCase().includes(q) ||
           verse?.text.toLowerCase().includes(q) ||
-          moodDisplay?.label.toLowerCase().includes(q)
+          moodLabel?.toLowerCase().includes(q)
         );
       });
     }
     return entries;
-  }, [journalEntries, searchQuery, filterDate]);
+  }, [journalEntries, searchQuery, filterDate, moodLabels]);
 
   // Group entries by month
   const groupedEntries = useMemo(() => {
@@ -102,7 +120,7 @@ export default function JournalPage() {
     for (const entry of sortedEntries) {
       const date = new Date(entry.updatedAt);
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      const label = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+      const label = date.toLocaleDateString(getLocale(lang), { year: 'numeric', month: 'long' });
       if (!monthMap.has(key)) {
         monthMap.set(key, []);
         groups.push({ label, entries: monthMap.get(key)! });
@@ -111,7 +129,7 @@ export default function JournalPage() {
     }
 
     return groups;
-  }, [sortedEntries]);
+  }, [sortedEntries, lang]);
 
   const handleStartEdit = (entry: JournalEntry) => {
     setEditingId(entry.id);
@@ -124,13 +142,13 @@ export default function JournalPage() {
     if (!editText.trim()) return;
     updateJournalEntry(entry.id, editText.trim(), editMood);
     setEditingId(null);
-    showToast('Journal entry updated');
+    showToast(j.entryUpdated);
   };
 
   const handleDeleteEntry = (entry: JournalEntry) => {
     deleteJournalEntry(entry.id);
     setExpandedId(null);
-    showToast('Journal entry removed');
+    showToast(j.entryRemoved);
   };
 
   const handleNewEntry = () => {
@@ -140,7 +158,7 @@ export default function JournalPage() {
     setNewText('');
     setNewMood(undefined);
     setShowNewEntry(false);
-    showToast('Journal entry saved');
+    showToast(j.entrySaved);
   };
 
   const totalEntries = journalEntries.filter(e => e.text.trim()).length;
@@ -150,12 +168,12 @@ export default function JournalPage() {
     return (
       <AppLayout>
         <PageHeader
-          title="Journal"
-          subtitle="Pour out your heart before Him — He is a refuge for us."
+          title={j.title}
+          subtitle={j.subtitle}
           icon={<PenLine size={28} />}
         />
         <div className="flex items-center justify-center py-20">
-          <div className="text-sm text-[var(--text-muted)]">Loading your journal...</div>
+          <div className="text-sm text-[var(--text-muted)]">{j.loadingJournal}</div>
         </div>
       </AppLayout>
     );
@@ -164,14 +182,14 @@ export default function JournalPage() {
   return (
     <AppLayout>
       <PageHeader
-        title="Journal"
-        subtitle="Pour out your heart before Him — He is a refuge for us."
+        title={j.title}
+        subtitle={j.subtitle}
         icon={<PenLine size={28} />}
         action={
           <div className="flex items-center gap-3">
             {totalEntries > 0 && (
               <span className="text-sm text-[var(--text-muted)]">
-                {totalEntries} {totalEntries === 1 ? 'entry' : 'entries'}
+                {totalEntries} {totalEntries === 1 ? t.common.entry : t.common.entries}
               </span>
             )}
             <Button onClick={() => {
@@ -180,7 +198,7 @@ export default function JournalPage() {
               setShowNewEntry(true);
             }}>
               <Plus size={16} />
-              New Entry
+              {j.newEntry}
             </Button>
           </div>
         }
@@ -200,13 +218,13 @@ export default function JournalPage() {
                 <div className="flex items-center gap-2">
                   <PenLine size={18} className="text-[var(--accent)]" />
                   <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
-                    New Reflection
+                    {j.newReflection}
                   </h2>
                 </div>
                 <button
                   onClick={() => setShowNewEntry(false)}
                   className="p-1.5 rounded-lg hover:bg-[var(--bg-secondary)] text-[var(--text-muted)]"
-                  aria-label="Close"
+                  aria-label={t.common.close}
                 >
                   <X size={16} />
                 </button>
@@ -224,12 +242,12 @@ export default function JournalPage() {
               })()}
 
               {/* Mood Picker */}
-              <MoodPicker selected={newMood} onSelect={setNewMood} />
+              <MoodPicker selected={newMood} onSelect={setNewMood} labels={j} />
 
               <textarea
                 value={newText}
                 onChange={(e) => setNewText(e.target.value)}
-                placeholder="What is God speaking to your heart today?"
+                placeholder={j.whatIsSpeaking}
                 rows={5}
                 className="w-full px-4 py-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none font-scripture text-sm leading-relaxed"
                 aria-label="New journal entry"
@@ -238,7 +256,7 @@ export default function JournalPage() {
               <div className="mt-3 flex justify-end">
                 <Button size="sm" onClick={handleNewEntry}>
                   <Save size={14} />
-                  Save Entry
+                  {j.saveEntry}
                 </Button>
               </div>
             </Card>
@@ -254,11 +272,11 @@ export default function JournalPage() {
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
               <input
                 type="text"
-                placeholder="Search journal entries..."
+                placeholder={j.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-                aria-label="Search journal entries"
+                aria-label={j.searchPlaceholder}
               />
             </div>
             <button
@@ -268,7 +286,7 @@ export default function JournalPage() {
                   ? 'bg-[var(--accent)]/10 border-[var(--accent)]/30 text-[var(--accent)]'
                   : 'bg-[var(--bg-secondary)] border-[var(--border-color)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
-              aria-label="Filter by date"
+              aria-label={j.filterByDate}
             >
               <Calendar size={16} />
             </button>
@@ -276,13 +294,13 @@ export default function JournalPage() {
           {filterDate && (
             <div className="flex items-center gap-2">
               <span className="text-xs text-[var(--text-muted)]">
-                Showing entries from {filterDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                {j.showingEntriesFrom.replace('{date}', filterDate.toLocaleDateString(getLocale(lang), { month: 'long', day: 'numeric', year: 'numeric' }))}
               </span>
               <button
                 onClick={() => setFilterDate(null)}
                 className="text-xs text-[var(--accent)] hover:underline"
               >
-                Show all
+                {t.common.showAll}
               </button>
             </div>
           )}
@@ -300,11 +318,11 @@ export default function JournalPage() {
       {sortedEntries.filter(e => e.text.trim()).length === 0 ? (
         <EmptyState
           icon={<PenLine size={48} />}
-          title="Your journal awaits"
-          description="Start capturing your thoughts, prayers, and reflections. Write from the devotional page or tap 'New Entry' above."
+          title={j.emptyTitle}
+          description={j.emptyDesc}
           scripture={{
-            text: 'Search me, God, and know my heart; test me and know my anxious thoughts.',
-            reference: 'Psalm 139:23',
+            text: j.emptyScripture,
+            reference: j.emptyScriptureRef,
           }}
           action={
             !showNewEntry ? (
@@ -314,7 +332,7 @@ export default function JournalPage() {
                 setShowNewEntry(true);
               }}>
                 <Plus size={16} />
-                Write Your First Entry
+                {j.writeFirst}
               </Button>
             ) : undefined
           }
@@ -336,7 +354,8 @@ export default function JournalPage() {
                     const entryDate = dateKeyToDate(entry.dateKey);
                     const isExpanded = expandedId === entry.id;
                     const isEditing = editingId === entry.id;
-                    const moodDisplay = getMoodDisplay(entry.mood);
+                    const moodEmoji = getMoodEmoji(entry.mood);
+                    const moodLabel = getMoodLabel(entry.mood);
 
                     return (
                       <motion.div
@@ -356,8 +375,8 @@ export default function JournalPage() {
                           >
                             <div className="flex-shrink-0 mt-0.5">
                               <div className="w-8 h-8 rounded-full bg-[var(--accent)]/10 flex items-center justify-center">
-                                {moodDisplay ? (
-                                  <span className="text-base" title={moodDisplay.label}>{moodDisplay.emoji}</span>
+                                {moodEmoji ? (
+                                  <span className="text-base" title={moodLabel || undefined}>{moodEmoji}</span>
                                 ) : (
                                   <Calendar size={14} className="text-[var(--accent)]" />
                                 )}
@@ -373,9 +392,9 @@ export default function JournalPage() {
                                     {verse.reference}
                                   </span>
                                 )}
-                                {moodDisplay && (
+                                {moodEmoji && moodLabel && (
                                   <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--accent-gold)]/10 text-[var(--accent-gold)]">
-                                    {moodDisplay.emoji} {moodDisplay.label}
+                                    {moodEmoji} {moodLabel}
                                   </span>
                                 )}
                               </div>
@@ -415,7 +434,7 @@ export default function JournalPage() {
                                   {/* Journal text or edit form */}
                                   {isEditing ? (
                                     <div>
-                                      <MoodPicker selected={editMood} onSelect={setEditMood} />
+                                      <MoodPicker selected={editMood} onSelect={setEditMood} labels={j} />
                                       <textarea
                                         value={editText}
                                         onChange={(e) => setEditText(e.target.value)}
@@ -430,11 +449,11 @@ export default function JournalPage() {
                                           size="sm"
                                           onClick={() => setEditingId(null)}
                                         >
-                                          Cancel
+                                          {t.common.cancel}
                                         </Button>
                                         <Button size="sm" onClick={() => handleSaveEdit(entry)}>
                                           <Save size={14} />
-                                          Save
+                                          {t.common.save}
                                         </Button>
                                       </div>
                                     </div>
@@ -445,7 +464,7 @@ export default function JournalPage() {
                                       </p>
                                       <div className="mt-4 flex items-center justify-between">
                                         <span className="text-xs text-[var(--text-muted)]">
-                                          {entry.updatedAt !== entry.createdAt ? 'Edited ' : ''}
+                                          {entry.updatedAt !== entry.createdAt ? j.edited : ''}
                                           {formatShortDate(entry.updatedAt)}
                                         </span>
                                         <div className="flex items-center gap-1">
@@ -455,7 +474,7 @@ export default function JournalPage() {
                                             onClick={() => handleStartEdit(entry)}
                                           >
                                             <PenLine size={14} />
-                                            Edit
+                                            {t.common.edit}
                                           </Button>
                                           <button
                                             onClick={() => handleDeleteEntry(entry)}
@@ -487,8 +506,8 @@ export default function JournalPage() {
       {totalEntries > 0 && (
         <div className="text-center py-8">
           <p className="font-scripture text-sm text-[var(--text-muted)]">
-            &ldquo;Search me, God, and know my heart; test me and know my anxious thoughts.&rdquo;
-            <span className="block mt-1 not-italic text-xs">— Psalm 139:23</span>
+            &ldquo;{j.footerVerse}&rdquo;
+            <span className="block mt-1 not-italic text-xs">{j.footerRef}</span>
           </p>
         </div>
       )}
@@ -496,10 +515,20 @@ export default function JournalPage() {
   );
 }
 
-function MoodPicker({ selected, onSelect }: { selected?: JournalMood; onSelect: (mood: JournalMood | undefined) => void }) {
+function MoodPicker({ selected, onSelect, labels }: { selected?: JournalMood; onSelect: (mood: JournalMood | undefined) => void; labels: typeof import('@/lib/i18n/en').default.journal }) {
+  const moodLabels: Record<JournalMood, string> = {
+    joyful: labels.moodJoyful,
+    grateful: labels.moodGrateful,
+    peaceful: labels.moodPeaceful,
+    hopeful: labels.moodHopeful,
+    reflective: labels.moodReflective,
+    struggling: labels.moodStruggling,
+    seeking: labels.moodSeeking,
+  };
+
   return (
     <div className="mb-4">
-      <p className="text-xs font-medium text-[var(--text-muted)] mb-2">How are you feeling?</p>
+      <p className="text-xs font-medium text-[var(--text-muted)] mb-2">{labels.howFeeling}</p>
       <div className="flex flex-wrap gap-2">
         {MOODS.map(mood => (
           <button
@@ -513,7 +542,7 @@ function MoodPicker({ selected, onSelect }: { selected?: JournalMood; onSelect: 
             }`}
           >
             <span>{mood.emoji}</span>
-            {mood.label}
+            {moodLabels[mood.value]}
           </button>
         ))}
       </div>
