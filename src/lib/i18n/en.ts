@@ -38,7 +38,7 @@ const en = {
     journal: 'Journal',
     prayerJournal: 'Prayer Journal',
     readingPlans: 'Reading Plans',
-    theBible: 'The Bible',
+    theBible: 'Bible',
     bibleSearch: 'Bible Search',
     gratitudeWall: 'Gratitude Wall',
     growthTracker: 'Growth Tracker',
