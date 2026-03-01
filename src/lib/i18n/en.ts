@@ -385,7 +385,14 @@ const en = {
       'July', 'August', 'September', 'October', 'November', 'December',
     ],
   },
-} as const;
+};
 
-export type Translations = typeof en;
-export default en;
+/** Recursively widen readonly string-literal types to plain string / string[] */
+type Widen<T> = T extends readonly string[]
+  ? string[]
+  : T extends string
+    ? string
+    : { [K in keyof T]: Widen<T[K]> };
+
+export type Translations = Widen<typeof en>;
+export default en as Translations;
