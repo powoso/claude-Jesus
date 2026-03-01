@@ -38,7 +38,7 @@ interface AppState {
   deleteGratitudeEntry: (id: string) => void;
 
   journalEntries: JournalEntry[];
-  saveJournalEntry: (dateKey: string, text: string, verseId: number) => void;
+  saveJournalEntry: (dateKey: string, text: string, verseId: number, mood?: string) => void;
   getJournalEntry: (dateKey: string) => JournalEntry | undefined;
 
   weeklyCheckIns: WeeklyCheckIn[];
@@ -472,13 +472,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     syncAfterSave();
   }, [markSaved, syncAfterSave]);
 
-  const saveJournalEntry = useCallback((dateKey: string, text: string, verseId: number) => {
+  const saveJournalEntry = useCallback((dateKey: string, text: string, verseId: number, mood?: string) => {
     setJournalEntries(prev => {
       const existing = prev.find(e => e.dateKey === dateKey);
       let next: JournalEntry[];
       if (existing) {
         next = prev.map(e => e.dateKey === dateKey
-          ? { ...e, text, verseId, updatedAt: new Date().toISOString() }
+          ? { ...e, text, verseId, ...(mood !== undefined ? { mood: mood as JournalEntry['mood'] } : {}), updatedAt: new Date().toISOString() }
           : e
         );
       } else {
@@ -487,6 +487,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           dateKey,
           text,
           verseId,
+          ...(mood ? { mood: mood as JournalEntry['mood'] } : {}),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         }, ...prev];

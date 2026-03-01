@@ -69,12 +69,15 @@ export interface MemoryVerse {
   easeFactor: number;
 }
 
+export type JournalMood = 'joyful' | 'grateful' | 'peaceful' | 'hopeful' | 'reflective' | 'struggling' | 'seeking';
+
 export interface JournalEntry {
   id: string;
   /** Day-of-year key like "2026-58" for consistent lookup */
   dateKey: string;
   text: string;
   verseId: number;
+  mood?: JournalMood;
   createdAt: string;
   updatedAt: string;
 }

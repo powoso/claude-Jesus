@@ -15,7 +15,22 @@ import { useApp } from '@/contexts/AppContext';
 import { useToast } from '@/components/ui/Toast';
 import { dailyVerses } from '@/data/verses';
 import { formatShortDate, getDateKey } from '@/lib/utils';
-import { JournalEntry } from '@/lib/types';
+import { JournalEntry, JournalMood } from '@/lib/types';
+
+const MOODS: { value: JournalMood; emoji: string; label: string }[] = [
+  { value: 'joyful', emoji: '😊', label: 'Joyful' },
+  { value: 'grateful', emoji: '🙏', label: 'Grateful' },
+  { value: 'peaceful', emoji: '☮️', label: 'Peaceful' },
+  { value: 'hopeful', emoji: '🌅', label: 'Hopeful' },
+  { value: 'reflective', emoji: '💭', label: 'Reflective' },
+  { value: 'struggling', emoji: '💪', label: 'Struggling' },
+  { value: 'seeking', emoji: '🔍', label: 'Seeking' },
+];
+
+function getMoodDisplay(mood?: JournalMood) {
+  if (!mood) return null;
+  return MOODS.find(m => m.value === mood) || null;
+}
 
 function getVerseById(id: number) {
   return dailyVerses.find(v => v.id === id);
@@ -36,8 +51,10 @@ export default function JournalPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
+  const [editMood, setEditMood] = useState<JournalMood | undefined>(undefined);
   const [showNewEntry, setShowNewEntry] = useState(false);
   const [newText, setNewText] = useState('');
+  const [newMood, setNewMood] = useState<JournalMood | undefined>(undefined);
 
   const todayKey = getDateKey();
   const todayEntry = getJournalEntry(todayKey);
@@ -50,10 +67,12 @@ export default function JournalPage() {
       const q = searchQuery.toLowerCase();
       entries = entries.filter(e => {
         const verse = getVerseById(e.verseId);
+        const moodDisplay = getMoodDisplay(e.mood);
         return (
           e.text.toLowerCase().includes(q) ||
           verse?.reference.toLowerCase().includes(q) ||
-          verse?.text.toLowerCase().includes(q)
+          verse?.text.toLowerCase().includes(q) ||
+          moodDisplay?.label.toLowerCase().includes(q)
         );
       });
     }
@@ -82,12 +101,13 @@ export default function JournalPage() {
   const handleStartEdit = (entry: JournalEntry) => {
     setEditingId(entry.id);
     setEditText(entry.text);
+    setEditMood(entry.mood);
     setExpandedId(entry.id);
   };
 
   const handleSaveEdit = (entry: JournalEntry) => {
     if (!editText.trim()) return;
-    saveJournalEntry(entry.dateKey, editText.trim(), entry.verseId);
+    saveJournalEntry(entry.dateKey, editText.trim(), entry.verseId, editMood);
     setEditingId(null);
     showToast('Journal entry updated');
   };
@@ -105,8 +125,9 @@ export default function JournalPage() {
     );
     const verseIndex = ((dayOfYear - 1) % dailyVerses.length + dailyVerses.length) % dailyVerses.length;
     const verse = dailyVerses[verseIndex];
-    saveJournalEntry(todayKey, newText.trim(), verse.id);
+    saveJournalEntry(todayKey, newText.trim(), verse.id, newMood);
     setNewText('');
+    setNewMood(undefined);
     setShowNewEntry(false);
     showToast('Journal entry saved');
   };
@@ -175,6 +196,10 @@ export default function JournalPage() {
                   </div>
                 );
               })()}
+
+              {/* Mood Picker */}
+              <MoodPicker selected={newMood} onSelect={setNewMood} />
+
               <textarea
                 value={newText || todayEntry?.text || ''}
                 onChange={(e) => setNewText(e.target.value)}
@@ -248,6 +273,7 @@ export default function JournalPage() {
                     const entryDate = dateKeyToDate(entry.dateKey);
                     const isExpanded = expandedId === entry.id;
                     const isEditing = editingId === entry.id;
+                    const moodDisplay = getMoodDisplay(entry.mood);
 
                     return (
                       <motion.div
@@ -267,17 +293,26 @@ export default function JournalPage() {
                           >
                             <div className="flex-shrink-0 mt-0.5">
                               <div className="w-8 h-8 rounded-full bg-[var(--accent)]/10 flex items-center justify-center">
-                                <Calendar size={14} className="text-[var(--accent)]" />
+                                {moodDisplay ? (
+                                  <span className="text-base" title={moodDisplay.label}>{moodDisplay.emoji}</span>
+                                ) : (
+                                  <Calendar size={14} className="text-[var(--accent)]" />
+                                )}
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
                                 <span className="text-sm font-semibold text-[var(--text-primary)]">
                                   {entryDate ? formatShortDate(entryDate) : entry.dateKey}
                                 </span>
                                 {verse && (
                                   <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)]">
                                     {verse.reference}
+                                  </span>
+                                )}
+                                {moodDisplay && (
+                                  <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--accent-gold)]/10 text-[var(--accent-gold)]">
+                                    {moodDisplay.emoji} {moodDisplay.label}
                                   </span>
                                 )}
                               </div>
@@ -317,6 +352,7 @@ export default function JournalPage() {
                                   {/* Journal text or edit form */}
                                   {isEditing ? (
                                     <div>
+                                      <MoodPicker selected={editMood} onSelect={setEditMood} />
                                       <textarea
                                         value={editText}
                                         onChange={(e) => setEditText(e.target.value)}
@@ -394,5 +430,30 @@ export default function JournalPage() {
         </div>
       )}
     </AppLayout>
+  );
+}
+
+function MoodPicker({ selected, onSelect }: { selected?: JournalMood; onSelect: (mood: JournalMood | undefined) => void }) {
+  return (
+    <div className="mb-4">
+      <p className="text-xs font-medium text-[var(--text-muted)] mb-2">How are you feeling?</p>
+      <div className="flex flex-wrap gap-2">
+        {MOODS.map(mood => (
+          <button
+            key={mood.value}
+            type="button"
+            onClick={() => onSelect(selected === mood.value ? undefined : mood.value)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border ${
+              selected === mood.value
+                ? 'bg-[var(--accent)] text-white border-[var(--accent)] scale-105'
+                : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
+            }`}
+          >
+            <span>{mood.emoji}</span>
+            {mood.label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
