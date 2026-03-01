@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daily-walk-v6';
+const CACHE_NAME = 'daily-walk-v7';
 const OFFLINE_URL = '/devotional';
 
 // Pre-cache core app shell
