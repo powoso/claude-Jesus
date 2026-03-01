@@ -24,10 +24,10 @@ export function formatShortDate(date: string | Date): string {
 }
 
 export function getDayOfYear(date: Date = new Date()): number {
-  const start = new Date(date.getFullYear(), 0, 0);
-  const diff = date.getTime() - start.getTime();
-  const oneDay = 1000 * 60 * 60 * 24;
-  return Math.floor(diff / oneDay);
+  // Use UTC to avoid DST-related off-by-one errors
+  const start = Date.UTC(date.getFullYear(), 0, 0);
+  const current = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  return (current - start) / (1000 * 60 * 60 * 24);
 }
 
 export function getWeekNumber(date: Date = new Date()): number {

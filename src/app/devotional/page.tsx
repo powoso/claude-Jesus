@@ -16,7 +16,7 @@ import { dailyVerses, devotionalReflections } from '@/data/verses';
 import { getDayOfYear, formatDate, copyToClipboard, getStreakCount, getDateKey } from '@/lib/utils';
 
 export default function DevotionalPage() {
-  const { prayerDates, readingProgress, saveJournalEntry, getJournalEntry, visitDates, recordVisit } = useApp();
+  const { prayerDates, readingProgress, saveJournalEntry, getJournalEntry, visitDates, recordVisit, isHydrated } = useApp();
   const { showToast } = useToast();
   const today = new Date();
   const [dayOffset, setDayOffset] = useState(0);
@@ -251,7 +251,7 @@ export default function DevotionalPage() {
               <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
                 My Journal
               </h2>
-              {existingEntry && !journalDirty && (
+              {isHydrated && existingEntry && !journalDirty && (
                 <span className="text-xs text-[var(--text-muted)] ml-auto">Saved</span>
               )}
             </div>

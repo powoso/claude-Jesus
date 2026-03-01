@@ -37,11 +37,11 @@ function getVerseById(id: number) {
 }
 
 function dateKeyToDate(dateKey: string): Date | null {
-  const [year, dayOfYear] = dateKey.split('-').map(Number);
-  if (!year || !dayOfYear) return null;
-  const date = new Date(year, 0);
-  date.setDate(dayOfYear);
-  return date;
+  const parts = dateKey.split('-').map(Number);
+  const year = parts[0];
+  const dayOfYear = parts[1];
+  if (year == null || dayOfYear == null || isNaN(year) || isNaN(dayOfYear)) return null;
+  return new Date(year, 0, dayOfYear);
 }
 
 function getTodaysVerse() {
@@ -52,7 +52,7 @@ function getTodaysVerse() {
 }
 
 export default function JournalPage() {
-  const { journalEntries, addJournalEntry, updateJournalEntry, deleteJournalEntry } = useApp();
+  const { journalEntries, addJournalEntry, updateJournalEntry, deleteJournalEntry, isHydrated } = useApp();
   const { showToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -133,6 +133,22 @@ export default function JournalPage() {
   };
 
   const totalEntries = journalEntries.filter(e => e.text.trim()).length;
+
+  // Show minimal loading state until localStorage data is hydrated
+  if (!isHydrated) {
+    return (
+      <AppLayout>
+        <PageHeader
+          title="Journal"
+          subtitle="Pour out your heart before Him — He is a refuge for us."
+          icon={<PenLine size={28} />}
+        />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-sm text-[var(--text-muted)]">Loading your journal...</div>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

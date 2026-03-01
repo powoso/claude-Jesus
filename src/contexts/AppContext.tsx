@@ -519,7 +519,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateJournalEntry = useCallback((id: string, text: string, mood?: string) => {
     setJournalEntries(prev => {
       const next = prev.map(e => e.id === id
-        ? { ...e, text, ...(mood !== undefined ? { mood: mood as JournalEntry['mood'] } : {}), updatedAt: new Date().toISOString() }
+        ? { ...e, text, mood: (mood as JournalEntry['mood']) ?? undefined, updatedAt: new Date().toISOString() }
         : e
       );
       saveToStorage(KEYS.journal, next);
