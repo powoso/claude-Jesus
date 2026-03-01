@@ -64,7 +64,6 @@ export default function AboutPage() {
               { icon: '📖', text: 'Daily Devotionals with 365+ curated Bible verses' },
               { icon: '🙏', text: 'Prayer Journal with answered prayer timeline' },
               { icon: '📚', text: 'Bible Reading Plans with progress tracking' },
-              { icon: '🧠', text: 'Scripture Memory Studio with practice modes' },
               { icon: '💛', text: 'Worship & Gratitude Wall' },
               { icon: '📈', text: 'Spiritual Growth Tracker with visual charts' },
             ].map((item, i) => (

@@ -15,7 +15,7 @@ export default function PrivacyPolicyPage() {
       icon: <Eye size={18} className="text-[var(--accent)]" />,
       title: 'Information We Collect',
       content:
-        'By default, Daily Walk does not collect, transmit, or store any personal information on external servers. All data you enter — including devotional reflections, prayer entries, scripture memory progress, gratitude entries, and growth check-ins — is stored on your device using your browser\'s localStorage. If you enable Cloud Sync, you provide an email address to create an account, and your app data is transmitted to Google Firebase (Firestore) so you can access it across devices.',
+        'By default, Daily Walk does not collect, transmit, or store any personal information on external servers. All data you enter — including devotional reflections, prayer entries, gratitude entries, and growth check-ins — is stored on your device using your browser\'s localStorage. If you enable Cloud Sync, you provide an email address to create an account, and your app data is transmitted to Google Firebase (Firestore) so you can access it across devices.',
     },
     {
       icon: <Lock size={18} className="text-[var(--accent)]" />,

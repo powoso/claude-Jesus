@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, BookOpen, Copy, Plus, Filter, X, Loader2, Share2, Download, ChevronDown } from 'lucide-react';
+import { Search, BookOpen, Copy, Filter, X, Loader2, Share2, Download, ChevronDown } from 'lucide-react';
 import { AppLayout } from '@/components/navigation/AppLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/Input';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { useApp } from '@/contexts/AppContext';
 import { useToast } from '@/components/ui/Toast';
 import { dailyVerses } from '@/data/verses';
 import { copyToClipboard } from '@/lib/utils';
@@ -151,7 +150,6 @@ async function generateVerseCard(reference: string, text: string): Promise<Blob>
 }
 
 export default function BibleSearchPage() {
-  const { addMemoryVerse, memoryVerses } = useApp();
   const { showToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -245,18 +243,6 @@ export default function BibleSearchPage() {
   const handleCopy = async (reference: string, text: string) => {
     await copyToClipboard(`"${text}" — ${reference}`);
     showToast('Verse copied to clipboard', 'success');
-  };
-
-  const handleSaveToMemory = (reference: string, text: string) => {
-    const alreadySaved = memoryVerses.some(
-      v => v.reference.toLowerCase() === reference.toLowerCase()
-    );
-    if (alreadySaved) {
-      showToast('Already in your memory verses', 'info');
-      return;
-    }
-    addMemoryVerse(reference, text);
-    showToast('Saved to Scripture Memory!', 'success');
   };
 
   const handleShare = async (reference: string, text: string) => {
@@ -413,7 +399,7 @@ export default function BibleSearchPage() {
                       theme={verse.theme}
                       index={index}
                       onCopy={handleCopy}
-                      onSave={handleSaveToMemory}
+
                       onShare={handleShare}
                     />
                   ))}
@@ -544,7 +530,6 @@ export default function BibleSearchPage() {
                   text={lookupResult.text}
                   index={0}
                   onCopy={handleCopy}
-                  onSave={handleSaveToMemory}
                   onShare={handleShare}
                 />
               </div>
@@ -574,7 +559,6 @@ function VerseCard({
   theme,
   index,
   onCopy,
-  onSave,
   onShare,
 }: {
   reference: string;
@@ -582,7 +566,6 @@ function VerseCard({
   theme?: string;
   index: number;
   onCopy: (ref: string, text: string) => void;
-  onSave: (ref: string, text: string) => void;
   onShare: (ref: string, text: string) => void;
 }) {
   return (
@@ -618,14 +601,6 @@ function VerseCard({
             title="Copy verse"
           >
             <Copy size={14} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onSave(reference, text)}
-            title="Save to memory"
-          >
-            <Plus size={14} />
           </Button>
         </div>
       </div>

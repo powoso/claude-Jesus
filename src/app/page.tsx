@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import {
   BookHeart,
   BookOpen,
-  Brain,
   Heart,
   TrendingUp,
   Home,
@@ -20,7 +19,6 @@ const features = [
   { icon: Home, title: 'Daily Devotionals', description: 'Start each day with God\'s Word and reflective questions.' },
   { icon: BookHeart, title: 'Prayer Journal', description: 'Pour out your heart and track God\'s faithfulness.' },
   { icon: BookOpen, title: 'Reading Plans', description: 'Journey through Scripture with structured reading plans.' },
-  { icon: Brain, title: 'Scripture Memory', description: 'Hide God\'s Word in your heart with practice tools.' },
   { icon: Heart, title: 'Gratitude Wall', description: 'Capture moments of praise and thankfulness.' },
   { icon: TrendingUp, title: 'Growth Tracker', description: 'Reflect on your spiritual journey with gentle check-ins.' },
 ];
