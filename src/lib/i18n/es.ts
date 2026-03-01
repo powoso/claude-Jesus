@@ -40,7 +40,7 @@ const es: Translations = {
     journal: 'Diario',
     prayerJournal: 'Diario de Oración',
     readingPlans: 'Planes de Lectura',
-    theBible: 'La Biblia',
+    theBible: 'Biblia',
     bibleSearch: 'Buscar en la Biblia',
     gratitudeWall: 'Muro de Gratitud',
     growthTracker: 'Crecimiento',
