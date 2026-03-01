@@ -4,6 +4,7 @@ import { SyncProvider } from '@/contexts/SyncContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import { ServiceWorkerRegistrar } from '@/components/ui/ServiceWorkerRegistrar';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
+import { InstallPrompt } from '@/components/ui/InstallPrompt';
 
 import './globals.css';
 
@@ -148,6 +149,7 @@ export default function RootLayout({
             <ToastProvider>
               <ServiceWorkerRegistrar />
               <OfflineIndicator />
+              <InstallPrompt />
 
               {children}
             </ToastProvider>

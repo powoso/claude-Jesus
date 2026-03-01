@@ -66,7 +66,7 @@ export function InstallPrompt() {
 
   const bannerStyle: React.CSSProperties = {
     position: 'fixed',
-    bottom: '1rem',
+    bottom: '5rem',
     left: '1rem',
     right: '1rem',
     zIndex: 9999,
