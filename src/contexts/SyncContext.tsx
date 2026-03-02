@@ -175,6 +175,19 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     if (unsubRef.current) { unsubRef.current(); unsubRef.current = null; }
   }, []);
 
+  // Track online/offline status
+  useEffect(() => {
+    const goOffline = () => { if (user) setSyncStatus('offline'); };
+    const goOnline = () => { if (user) setSyncStatus('idle'); };
+    window.addEventListener('offline', goOffline);
+    window.addEventListener('online', goOnline);
+    if (!navigator.onLine && user) setSyncStatus('offline');
+    return () => {
+      window.removeEventListener('offline', goOffline);
+      window.removeEventListener('online', goOnline);
+    };
+  }, [user]);
+
   // Clean up listener on unmount
   useEffect(() => {
     return () => { if (unsubRef.current) unsubRef.current(); };
