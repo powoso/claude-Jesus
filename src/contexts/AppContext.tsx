@@ -171,8 +171,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [user, pushToCloud]);
 
   // When user signs in: pull cloud data and merge, then start real-time listener
+  // When user signs out: cancel any pending push to avoid leaking data
   useEffect(() => {
-    if (!user) { stopRealtimeSync(); return; }
+    if (!user) {
+      stopRealtimeSync();
+      if (cloudPushTimer.current) { clearTimeout(cloudPushTimer.current); cloudPushTimer.current = null; }
+      return;
+    }
 
     let cancelled = false;
     (async () => {
@@ -584,7 +589,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       markSaved();
       return next;
     });
-  }, [markSaved]);
+    syncAfterSave();
+  }, [markSaved, syncAfterSave]);
 
   const toggleChapterRead = useCallback((key: string) => {
     setBibleChaptersRead(prev => {
