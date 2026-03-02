@@ -82,7 +82,7 @@ interface LastRead {
 }
 
 // Bump this version to invalidate all cached entries (e.g. after fixing HTML stripping)
-const CACHE_VERSION = 5;
+const CACHE_VERSION = 6;
 
 function getCacheKey(book: string, chapter: number, translation: string): string {
   return `dw-bible-v${CACHE_VERSION}-${translation}-${book}-${chapter}`;
@@ -330,6 +330,35 @@ export default function BiblePage() {
     setInitialized(true);
   }, []);
 
+  // Fetch with timeout to prevent infinite loading when an API is down
+  const fetchWithTimeout = useCallback(async (url: string, timeoutMs = 8000): Promise<Response> => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { signal: controller.signal });
+      return res;
+    } finally {
+      clearTimeout(timer);
+    }
+  }, []);
+
+  // Fetch from bible-api.com (reliable public domain fallback)
+  const fetchFromBibleApi = useCallback(async (book: string, chapter: number, trans: string): Promise<ChapterData> => {
+    const ref = `${book} ${chapter}`;
+    const url = `https://bible-api.com/${encodeURIComponent(ref)}?translation=${trans}`;
+    const res = await fetchWithTimeout(url);
+    if (!res.ok) throw new Error('Chapter not found');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    return {
+      reference: data.reference,
+      verses: data.verses || [],
+      text: data.text?.trim() || '',
+      translation_id: trans,
+      translation_name: TRANSLATIONS.find(t => t.value === trans)?.label || trans,
+    };
+  }, [fetchWithTimeout]);
+
   // Fetch chapter text
   const fetchChapter = useCallback(async (book: string, chapter: number, trans: string) => {
     const cacheKey = getCacheKey(book, chapter, trans);
@@ -359,42 +388,36 @@ export default function BiblePage() {
 
       if (translationDef?.api === 'bolls') {
         // Use bolls.life API for NIV, ESV, NASB, NLT, NKJV
-        const bookNum = getBookNumber(book);
-        const url = `https://bolls.life/get-text/${trans}/${bookNum}/${chapter}/`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Chapter not found');
-        const data: { verse: number; text: string }[] = await res.json();
-        if (!Array.isArray(data) || data.length === 0) throw new Error('No verses found');
+        try {
+          const bookNum = getBookNumber(book);
+          const url = `https://bolls.life/get-text/${trans}/${bookNum}/${chapter}/`;
+          const res = await fetchWithTimeout(url);
+          if (!res.ok) throw new Error('Chapter not found');
+          const data: { verse: number; text: string }[] = await res.json();
+          if (!Array.isArray(data) || data.length === 0) throw new Error('No verses found');
 
-        chapterResult = {
-          reference: `${book} ${chapter}`,
-          verses: data.map(v => ({
-            book_id: '',
-            book_name: book,
-            chapter,
-            verse: v.verse,
-            text: stripHtml(v.text),
-          })),
-          text: data.map(v => stripHtml(v.text)).join(' '),
-          translation_id: trans,
-          translation_name: translationDef.label,
-        };
+          chapterResult = {
+            reference: `${book} ${chapter}`,
+            verses: data.map(v => ({
+              book_id: '',
+              book_name: book,
+              chapter,
+              verse: v.verse,
+              text: stripHtml(v.text),
+            })),
+            text: data.map(v => stripHtml(v.text)).join(' '),
+            translation_id: trans,
+            translation_name: translationDef.label,
+          };
+        } catch {
+          // bolls.life is down — fallback to bible-api.com with KJV
+          chapterResult = await fetchFromBibleApi(book, chapter, 'kjv');
+          // Switch to KJV so the dropdown and header reflect reality
+          setTranslation('kjv');
+        }
       } else {
         // Use bible-api.com for public domain translations
-        const ref = `${book} ${chapter}`;
-        const url = `https://bible-api.com/${encodeURIComponent(ref)}?translation=${trans}`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Chapter not found');
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
-
-        chapterResult = {
-          reference: data.reference,
-          verses: data.verses || [],
-          text: data.text?.trim() || '',
-          translation_id: trans,
-          translation_name: TRANSLATIONS.find(t => t.value === trans)?.label || trans,
-        };
+        chapterResult = await fetchFromBibleApi(book, chapter, trans);
       }
 
       // Cache in localStorage
@@ -409,7 +432,7 @@ export default function BiblePage() {
     } finally {
       setLoading(false);
     }
-  }, [b.loadError]);
+  }, [b.loadError, fetchWithTimeout, fetchFromBibleApi]);
 
   // Load chapter when selection changes
   useEffect(() => {
