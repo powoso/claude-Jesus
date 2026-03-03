@@ -36,20 +36,17 @@ import {
   OT_CATEGORIES,
   NT_CATEGORIES,
   getBookByName,
-  getBookNumber,
   getNextChapter,
   getPrevChapter,
 } from '@/data/bible-structure';
 
-type BibleApi = 'bible-api' | 'bolls';
+type BibleApi = 'bible-api' | 'cdn';
 
 const TRANSLATIONS: { value: string; label: string; short: string; api: BibleApi }[] = [
-  // bolls.life translations (includes popular copyrighted versions)
-  { value: 'NIV', label: 'New International Version', short: 'NIV', api: 'bolls' },
-  { value: 'ESV', label: 'English Standard Version', short: 'ESV', api: 'bolls' },
-  { value: 'NKJV', label: 'New King James Version', short: 'NKJV', api: 'bolls' },
-  { value: 'NLT', label: 'New Living Translation', short: 'NLT', api: 'bolls' },
-  { value: 'NASB', label: 'New American Standard Bible', short: 'NASB', api: 'bolls' },
+  // jsDelivr CDN translations (modern, free, reliable — served via Cloudflare CDN)
+  { value: 'en-bsb', label: 'Berean Standard Bible', short: 'BSB', api: 'cdn' },
+  { value: 'en-asv', label: 'American Standard Version', short: 'ASV', api: 'cdn' },
+  { value: 'en-lsv', label: 'Literal Standard Version', short: 'LSV', api: 'cdn' },
   // bible-api.com translations (public domain)
   { value: 'web', label: 'World English Bible', short: 'WEB', api: 'bible-api' },
   { value: 'kjv', label: 'King James Version', short: 'KJV', api: 'bible-api' },
@@ -58,6 +55,35 @@ const TRANSLATIONS: { value: string; label: string; short: string; api: BibleApi
   { value: 'clementine', label: 'Latin Vulgate', short: 'Vulgate', api: 'bible-api' },
   { value: 'almeida', label: 'Almeida (Portuguese)', short: 'Almeida', api: 'bible-api' },
 ];
+
+// Map book names to jsDelivr CDN path format (lowercase, no spaces)
+function getBookSlug(bookName: string): string {
+  const map: Record<string, string> = {
+    'Genesis': 'genesis', 'Exodus': 'exodus', 'Leviticus': 'leviticus',
+    'Numbers': 'numbers', 'Deuteronomy': 'deuteronomy', 'Joshua': 'joshua',
+    'Judges': 'judges', 'Ruth': 'ruth', '1 Samuel': '1samuel',
+    '2 Samuel': '2samuel', '1 Kings': '1kings', '2 Kings': '2kings',
+    '1 Chronicles': '1chronicles', '2 Chronicles': '2chronicles', 'Ezra': 'ezra',
+    'Nehemiah': 'nehemiah', 'Esther': 'esther', 'Job': 'job',
+    'Psalms': 'psalms', 'Proverbs': 'proverbs', 'Ecclesiastes': 'ecclesiastes',
+    'Song of Solomon': 'song', 'Isaiah': 'isaiah', 'Jeremiah': 'jeremiah',
+    'Lamentations': 'lamentations', 'Ezekiel': 'ezekiel', 'Daniel': 'daniel',
+    'Hosea': 'hosea', 'Joel': 'joel', 'Amos': 'amos', 'Obadiah': 'obadiah',
+    'Jonah': 'jonah', 'Micah': 'micah', 'Nahum': 'nahum', 'Habakkuk': 'habakkuk',
+    'Zephaniah': 'zephaniah', 'Haggai': 'haggai', 'Zechariah': 'zechariah',
+    'Malachi': 'malachi', 'Matthew': 'matthew', 'Mark': 'mark', 'Luke': 'luke',
+    'John': 'john', 'Acts': 'acts', 'Romans': 'romans',
+    '1 Corinthians': '1corinthians', '2 Corinthians': '2corinthians',
+    'Galatians': 'galatians', 'Ephesians': 'ephesians', 'Philippians': 'philippians',
+    'Colossians': 'colossians', '1 Thessalonians': '1thessalonians',
+    '2 Thessalonians': '2thessalonians', '1 Timothy': '1timothy',
+    '2 Timothy': '2timothy', 'Titus': 'titus', 'Philemon': 'philemon',
+    'Hebrews': 'hebrews', 'James': 'james', '1 Peter': '1peter',
+    '2 Peter': '2peter', '1 John': '1john', '2 John': '2john',
+    '3 John': '3john', 'Jude': 'jude', 'Revelation': 'revelation',
+  };
+  return map[bookName] || bookName.toLowerCase().replace(/\s+/g, '');
+}
 
 interface VerseData {
   book_id: string;
@@ -82,53 +108,29 @@ interface LastRead {
 }
 
 // Bump this version to invalidate all cached entries (e.g. after fixing HTML stripping)
-const CACHE_VERSION = 6;
+const CACHE_VERSION = 7;
 
 function getCacheKey(book: string, chapter: number, translation: string): string {
   return `dw-bible-v${CACHE_VERSION}-${translation}-${book}-${chapter}`;
 }
 
-/** Strip HTML tags and section headings from bolls.life verse text.
- *  bolls.life embeds section headings as HTML heading elements (e.g. <h3>The Beginning</h3>)
- *  or as plain text before a <br/> tag (e.g. "The Beginning<br/>In the beginning...")
- */
-function stripHtml(html: string): string {
-  // Remove HTML heading elements (h1-h6) and their content — these are section headings
-  // e.g. <h3>The Beginning</h3> or <h4 class="s1">The Creation</h4>
-  let cleaned = html.replace(/<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi, '');
-
-  // Remove plain-text section headings before <br/> tags (fallback for non-tagged headings).
-  // These are short (under ~80 chars), have no sentence-ending punctuation,
-  // and appear at the very start of the verse text.
-  cleaned = cleaned.replace(/^([^<]{1,80})<br\s*\/?>/i, (match, heading) => {
-    if (!/[.?!]$/.test(heading.trim())) {
-      return '';
-    }
-    return match;
-  });
-
-  // Strip all remaining HTML tags
-  cleaned = cleaned
-    .replace(/<br\s*\/?>/gi, ' ')
-    .replace(/<[^>]*>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\s+/g, ' ')
-    .trim();
-  return cleaned;
-}
+// Retired translations that no longer have a working API
+const RETIRED_TRANSLATIONS = new Set(['NIV', 'ESV', 'NKJV', 'NLT', 'NASB']);
 
 function getLastRead(): LastRead {
-  if (typeof window === 'undefined') return { book: 'Genesis', chapter: 1, translation: 'NIV' };
+  if (typeof window === 'undefined') return { book: 'Genesis', chapter: 1, translation: 'en-bsb' };
   try {
     const saved = localStorage.getItem('dw-bible-last-read');
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Migrate users who had a retired translation saved
+      if (RETIRED_TRANSLATIONS.has(parsed.translation)) {
+        parsed.translation = 'en-bsb';
+      }
+      return parsed;
+    }
   } catch { /* ignore */ }
-  return { book: 'Genesis', chapter: 1, translation: 'NIV' };
+  return { book: 'Genesis', chapter: 1, translation: 'en-bsb' };
 }
 
 function saveLastRead(lastRead: LastRead): void {
@@ -386,35 +388,28 @@ export default function BiblePage() {
       const translationDef = TRANSLATIONS.find(t => t.value === trans);
       let chapterResult: ChapterData;
 
-      if (translationDef?.api === 'bolls') {
-        // Use bolls.life API for NIV, ESV, NASB, NLT, NKJV
-        try {
-          const bookNum = getBookNumber(book);
-          const url = `https://bolls.life/get-text/${trans}/${bookNum}/${chapter}/`;
-          const res = await fetchWithTimeout(url);
-          if (!res.ok) throw new Error('Chapter not found');
-          const data: { verse: number; text: string }[] = await res.json();
-          if (!Array.isArray(data) || data.length === 0) throw new Error('No verses found');
+      if (translationDef?.api === 'cdn') {
+        // Use jsDelivr CDN (static JSON files, fast & reliable)
+        const slug = getBookSlug(book);
+        const url = `https://cdn.jsdelivr.net/gh/wldeh/bible-api/bibles/${trans}/books/${slug}/chapters/${chapter}.json`;
+        const res = await fetchWithTimeout(url);
+        if (!res.ok) throw new Error('Chapter not found');
+        const data: { data: { book: string; chapter: string; verse: string; text: string }[] } = await res.json();
+        if (!data.data || data.data.length === 0) throw new Error('No verses found');
 
-          chapterResult = {
-            reference: `${book} ${chapter}`,
-            verses: data.map(v => ({
-              book_id: '',
-              book_name: book,
-              chapter,
-              verse: v.verse,
-              text: stripHtml(v.text),
-            })),
-            text: data.map(v => stripHtml(v.text)).join(' '),
-            translation_id: trans,
-            translation_name: translationDef.label,
-          };
-        } catch {
-          // bolls.life is down — fallback to bible-api.com with KJV
-          chapterResult = await fetchFromBibleApi(book, chapter, 'kjv');
-          // Switch to KJV so the dropdown and header reflect reality
-          setTranslation('kjv');
-        }
+        chapterResult = {
+          reference: `${book} ${chapter}`,
+          verses: data.data.map(v => ({
+            book_id: '',
+            book_name: book,
+            chapter,
+            verse: parseInt(v.verse, 10),
+            text: v.text,
+          })),
+          text: data.data.map(v => v.text).join(' '),
+          translation_id: trans,
+          translation_name: translationDef.label,
+        };
       } else {
         // Use bible-api.com for public domain translations
         chapterResult = await fetchFromBibleApi(book, chapter, trans);
