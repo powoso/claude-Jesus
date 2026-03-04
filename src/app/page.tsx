@@ -127,7 +127,6 @@ export default function LandingPage() {
 
           <a
             href="https://apps.apple.com/us/app/daily-walk-bible-prayer/id6759921557"
-            target="_blank"
             rel="noopener noreferrer"
             aria-label="Download on the App Store"
             className="block transition-opacity hover:opacity-80"
