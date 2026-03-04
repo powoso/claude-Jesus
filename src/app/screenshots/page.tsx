@@ -2,9 +2,400 @@
 
 export default function ScreenshotsPage() {
   return (
-    <iframe
-      src="/store/screenshots/app-store-screenshots-v2.html"
-      style={{ width: '100vw', height: '100vh', border: 'none' }}
+    <div
+      dangerouslySetInnerHTML={{
+        __html: `
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
+
+  .ss-page * { margin: 0; padding: 0; box-sizing: border-box; }
+  .ss-page {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #0f0f1a;
+    color: white;
+    padding: 40px;
+    min-height: 100vh;
+  }
+  .ss-page h1 { text-align:center; margin-bottom:8px; font-size:32px; font-family:'Lora',serif; color:#D4AF37; }
+  .ss-page .instructions { text-align:center; color:#888; margin-bottom:50px; font-size:13px; max-width:750px; margin-left:auto; margin-right:auto; line-height:1.7; }
+  .ss-page .instructions strong { color: #ccc; }
+  .ss-page .size-group { margin-bottom: 70px; }
+  .ss-page .size-label { font-size:16px; font-weight:700; color:#D4AF37; margin-bottom:6px; border-bottom:1px solid #222; padding-bottom:8px; letter-spacing:0.5px; }
+  .ss-page .size-desc { font-size:12px; color:#666; margin-bottom:28px; }
+  .ss-page .screenshots-row { display:flex; gap:28px; overflow-x:auto; padding-bottom:20px; scroll-behavior:smooth; }
+  .ss-page .screenshots-row::-webkit-scrollbar { height:6px; }
+  .ss-page .screenshots-row::-webkit-scrollbar-track { background:#1a1a2e; border-radius:3px; }
+  .ss-page .screenshots-row::-webkit-scrollbar-thumb { background:#333; border-radius:3px; }
+  .ss-page .screenshot { flex-shrink:0; border-radius:24px; overflow:hidden; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; width:430px; height:932px; }
+  .ss-page .bg-devotional { background:linear-gradient(170deg,#4A6741 0%,#3B5535 30%,#2D4228 60%,#1E2F1C 100%); }
+  .ss-page .bg-prayer { background:linear-gradient(170deg,#4A5B7A 0%,#384868 30%,#283650 60%,#1C2640 100%); }
+  .ss-page .bg-bible { background:linear-gradient(170deg,#6B4A3A 0%,#553828 30%,#402818 60%,#2E1C10 100%); }
+  .ss-page .bg-memory { background:linear-gradient(170deg,#5C4A6E 0%,#483860 30%,#352850 60%,#241A3E 100%); }
+  .ss-page .bg-gratitude { background:linear-gradient(170deg,#8B7030 0%,#705820 30%,#584415 60%,#40300D 100%); }
+  .ss-page .bg-growth { background:linear-gradient(170deg,#3A6B5A 0%,#2A5545 30%,#1E4035 60%,#142D25 100%); }
+  .ss-page .bg-journal { background:linear-gradient(170deg,#6B5050 0%,#553C3C 30%,#402A2A 60%,#2E1C1C 100%); }
+  .ss-page .bg-reading { background:linear-gradient(170deg,#5A5A40 0%,#484830 30%,#363622 60%,#252518 100%); }
+  .ss-page .screenshot::before { content:''; position:absolute; top:-40%; left:-20%; width:140%; height:80%; background:radial-gradient(ellipse,rgba(255,255,255,0.06) 0%,transparent 70%); pointer-events:none; z-index:1; }
+  .ss-page .headline-area { padding:56px 36px 28px; text-align:center; width:100%; position:relative; z-index:2; }
+  .ss-page .headline-area h2 { font-family:'Lora',Georgia,serif; font-size:34px; font-weight:700; line-height:1.18; margin-bottom:14px; text-shadow:0 2px 30px rgba(0,0,0,0.4); letter-spacing:-0.3px; color:white; }
+  .ss-page .headline-area p { font-size:15px; opacity:0.85; line-height:1.55; max-width:310px; margin:0 auto; font-weight:400; color:white; }
+  .ss-page .phone-frame-outer { position:relative; z-index:2; margin:0 auto; }
+  .ss-page .phone-frame { width:290px; height:590px; background:#FFFDF7; border-radius:32px; box-shadow:0 25px 80px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.08),inset 0 0 0 1px rgba(255,253,247,0.3); overflow:hidden; margin:0 auto; position:relative; }
+  .ss-page .phone-frame::before { content:''; position:absolute; top:8px; left:50%; transform:translateX(-50%); width:90px; height:22px; background:#1a1a1a; border-radius:20px; z-index:10; }
+  .ss-page .phone-status-bar { height:44px; background:#FFFDF7; display:flex; align-items:flex-end; justify-content:center; font-size:12px; font-weight:600; color:#3D3328; padding:0 16px 4px; }
+  .ss-page .mock-content { padding:8px 14px; height:calc(100% - 44px); overflow:hidden; background:#FFFDF7; }
+  .ss-page .mock-page-title { font-family:'Lora',Georgia,serif; font-size:19px; font-weight:700; color:#3D3328; margin-bottom:3px; }
+  .ss-page .mock-subtitle { font-size:10.5px; color:#8B7B6B; margin-bottom:12px; }
+  .ss-page .mock-card { background:white; border:1px solid #EDE7DC; border-radius:14px; padding:13px; margin-bottom:9px; box-shadow:0 1px 6px rgba(107,91,75,0.05); }
+  .ss-page .mock-verse { font-family:'Lora',Georgia,serif; font-style:italic; font-size:12.5px; color:#3D3328; line-height:1.65; margin-bottom:6px; }
+  .ss-page .mock-ref { font-size:10.5px; color:#7C9070; font-weight:600; }
+  .ss-page .mock-badge { display:inline-block; font-size:9.5px; font-weight:600; padding:3px 10px; border-radius:20px; margin-right:5px; margin-bottom:6px; }
+  .ss-page .badge-green { background:#E8F0E4; color:#5A7A4A; }
+  .ss-page .badge-gold { background:#FDF5E0; color:#96791A; }
+  .ss-page .badge-blue { background:#E4EBF5; color:#4A5F8C; }
+  .ss-page .badge-purple { background:#EDE4F5; color:#6A4A8C; }
+  .ss-page .badge-rose { background:#F5E4E8; color:#8C4A5F; }
+  .ss-page .badge-teal { background:#E4F5F0; color:#3A6B5A; }
+  .ss-page .mock-progress-bar { height:5px; background:#EDE7DC; border-radius:3px; overflow:hidden; margin-top:6px; }
+  .ss-page .mock-progress-fill { height:100%; border-radius:3px; }
+  .ss-page .fill-green { background:linear-gradient(90deg,#7C9070,#9AB08F); }
+  .ss-page .fill-gold { background:linear-gradient(90deg,#C9A84C,#D4BC6A); }
+  .ss-page .fill-blue { background:linear-gradient(90deg,#6B7FAD,#8899BB); }
+  .ss-page .fill-purple { background:linear-gradient(90deg,#8B6BAD,#A088BB); }
+  .ss-page .fill-brown { background:linear-gradient(90deg,#9B7C6B,#B0947F); }
+  .ss-page .fill-teal { background:linear-gradient(90deg,#3A6B5A,#5A8B7A); }
+  .ss-page .mock-input { background:#F9F5EF; border:1px solid #EDE7DC; border-radius:10px; padding:10px 12px; font-size:10.5px; color:#B0A090; width:100%; margin-top:6px; font-style:italic; }
+  .ss-page .mock-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+  .ss-page .mock-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+  .ss-page .mock-stat { background:white; border:1px solid #EDE7DC; border-radius:12px; padding:10px 6px; text-align:center; box-shadow:0 1px 4px rgba(107,91,75,0.04); }
+  .ss-page .mock-stat-num { font-family:'Lora',serif; font-size:20px; font-weight:700; }
+  .ss-page .stat-green { color:#7C9070; }
+  .ss-page .stat-gold { color:#C9A84C; }
+  .ss-page .stat-blue { color:#6B7FAD; }
+  .ss-page .stat-purple { color:#8B6BAD; }
+  .ss-page .stat-teal { color:#3A6B5A; }
+  .ss-page .stat-rose { color:#8C4A5F; }
+  .ss-page .mock-stat-label { font-size:8.5px; color:#8B7B6B; margin-top:2px; font-weight:500; }
+  .ss-page .mock-prayer-item { display:flex; align-items:flex-start; gap:9px; padding:9px 0; border-bottom:1px solid #F5EFE8; }
+  .ss-page .mock-prayer-item:last-child { border-bottom:none; }
+  .ss-page .mock-prayer-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+  .ss-page .mock-prayer-text { font-size:11.5px; color:#3D3328; line-height:1.35; font-weight:500; }
+  .ss-page .mock-prayer-cat { font-size:9px; color:#8B7B6B; margin-top:2px; }
+  .ss-page .mock-gratitude-card { border-radius:12px; padding:11px 13px; margin-bottom:7px; font-size:11.5px; line-height:1.5; color:#3D3328; }
+  .ss-page .pastel-rose { background:#FFF0F0; border:1px solid #FFD6D6; }
+  .ss-page .pastel-sky { background:#F0F4FF; border:1px solid #D6E0FF; }
+  .ss-page .pastel-emerald { background:#F0FFF4; border:1px solid #C6F6D5; }
+  .ss-page .pastel-amber { background:#FFFBF0; border:1px solid #FEEBC8; }
+  .ss-page .pastel-violet { background:#F5F0FF; border:1px solid #DDD0FF; }
+  .ss-page .mock-streak-badge { display:inline-flex; align-items:center; gap:4px; background:linear-gradient(135deg,#FF8C42,#FF6B2B); color:white; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; box-shadow:0 2px 8px rgba(255,107,43,0.25); }
+  .ss-page .verse-num { font-size:8px; color:#7C9070; font-weight:700; vertical-align:super; margin-right:1px; }
+  .ss-page .bible-text { font-family:'Lora',serif; font-size:11.5px; color:#3D3328; line-height:1.7; }
+  .ss-page .section-label { font-size:10px; font-weight:600; color:#3D3328; margin-bottom:6px; letter-spacing:0.3px; }
+  .ss-page .section-label-small { font-size:9px; font-weight:600; color:#8B7B6B; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
+  .ss-page .app-name-badge { position:absolute; bottom:18px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.12); backdrop-filter:blur(12px); padding:7px 22px; border-radius:24px; font-size:13px; font-weight:600; letter-spacing:0.8px; white-space:nowrap; z-index:5; border:1px solid rgba(255,255,255,0.06); color:white; }
+  .ss-page .cross-icon { color:#D4AF37; font-size:14px; margin-right:5px; }
+  .ss-page .mock-tabs { display:flex; gap:0; margin-bottom:10px; background:#F5F0E8; border-radius:10px; padding:3px; }
+  .ss-page .mock-tab { flex:1; text-align:center; font-size:10px; font-weight:600; padding:6px 0; border-radius:8px; color:#8B7B6B; }
+  .ss-page .mock-tab.active { background:white; color:#3D3328; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+  .ss-page .translation-badge { display:inline-block; background:#7C9070; color:white; font-size:9px; font-weight:700; padding:2px 7px; border-radius:4px; margin-left:6px; letter-spacing:0.5px; }
+  .ss-page .book-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .ss-page .book-nav-btn { width:24px; height:24px; border-radius:50%; background:#F5F0E8; display:flex; align-items:center; justify-content:center; font-size:12px; color:#6B5B4B; }
+  .ss-page .book-nav-title { font-family:'Lora',serif; font-size:14px; font-weight:600; color:#3D3328; }
+</style>
+
+<div class="ss-page">
+
+<h1>Daily Walk &mdash; App Store Screenshots</h1>
+<p class="instructions">
+  <strong>How to capture:</strong> Right-click each screenshot frame in Chrome DevTools &rarr; "Capture node screenshot".<br>
+  Scale 3x for final 1290&times;2796 resolution. Upload at least 6 to App Store Connect.
+</p>
+
+<div class="size-group">
+  <div class="size-label">iPhone 6.7&quot; Display &mdash; 1290 &times; 2796px (scaled 3x = 430&times;932)</div>
+  <div class="size-desc">Primary display size for App Store.</div>
+
+  <div class="screenshots-row">
+
+    <!-- 1: DEVOTIONAL -->
+    <div class="screenshot bg-devotional">
+      <div class="headline-area">
+        <h2>Start Each Day<br>Closer to Jesus</h2>
+        <p>365 curated verses with guided reflections and daily journaling</p>
+      </div>
+      <div class="phone-frame-outer">
+        <div class="phone-frame">
+          <div class="phone-status-bar">9:41</div>
+          <div class="mock-content">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+              <div class="mock-page-title">Today's Walk</div>
+              <div class="mock-streak-badge">\u{1F525} 12</div>
+            </div>
+            <div class="mock-subtitle">March 4 &bull; Day 63 of 366</div>
+            <div class="mock-card">
+              <div class="mock-badge badge-green">Faith</div>
+              <div class="mock-verse">&ldquo;Trust in the Lord with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight.&rdquo;</div>
+              <div class="mock-ref">Proverbs 3:5-6</div>
+            </div>
+            <div class="mock-grid" style="margin-bottom:9px;">
+              <div class="mock-stat"><div class="mock-stat-num stat-green">12</div><div class="mock-stat-label">Prayer Streak</div></div>
+              <div class="mock-stat"><div class="mock-stat-num stat-gold">8</div><div class="mock-stat-label">Reading Streak</div></div>
+            </div>
+            <div class="mock-card">
+              <div class="section-label-small">Reflect</div>
+              <div style="font-size:11px;color:#6B5B4B;line-height:1.5;">What area of your life do you need to surrender to God&apos;s guidance today?</div>
+              <div class="mock-input">Write your thoughts...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="app-name-badge"><span class="cross-icon">\u2720</span> Daily Walk</div>
+    </div>
+
+    <!-- 2: PRAYER JOURNAL -->
+    <div class="screenshot bg-prayer">
+      <div class="headline-area">
+        <h2>Track Your<br>Prayer Life</h2>
+        <p>Organize prayers, see answers, and witness God's faithfulness</p>
+      </div>
+      <div class="phone-frame-outer">
+        <div class="phone-frame">
+          <div class="phone-status-bar">9:41</div>
+          <div class="mock-content">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+              <div class="mock-page-title">Prayer Journal</div>
+              <div class="mock-streak-badge">\u{1F525} 8</div>
+            </div>
+            <div class="mock-subtitle">7 active prayers &bull; 12 answered</div>
+            <div class="mock-tabs"><div class="mock-tab active">Active</div><div class="mock-tab">Answered</div></div>
+            <div class="mock-grid" style="margin-bottom:9px;">
+              <div class="mock-stat"><div class="mock-stat-num stat-blue">19</div><div class="mock-stat-label">Total Prayers</div></div>
+              <div class="mock-stat"><div class="mock-stat-num stat-gold">12</div><div class="mock-stat-label">Answered</div></div>
+            </div>
+            <div class="mock-card" style="padding:6px 13px;">
+              <div class="mock-prayer-item"><div class="mock-prayer-dot" style="background:#3A6B5A;"></div><div><div class="mock-prayer-text">Healing for Mom&apos;s recovery</div><div class="mock-prayer-cat"><span class="mock-badge badge-teal" style="margin:0;padding:2px 6px;font-size:8px;">Healing</span> &nbsp;Active</div></div></div>
+              <div class="mock-prayer-item"><div class="mock-prayer-dot" style="background:#C9A84C;"></div><div><div class="mock-prayer-text">Guidance for career change</div><div class="mock-prayer-cat"><span class="mock-badge badge-blue" style="margin:0;padding:2px 6px;font-size:8px;">Guidance</span> &nbsp;Answered \u2713</div></div></div>
+              <div class="mock-prayer-item"><div class="mock-prayer-dot" style="background:#6B7FAD;"></div><div><div class="mock-prayer-text">Peace for my family</div><div class="mock-prayer-cat"><span class="mock-badge badge-blue" style="margin:0;padding:2px 6px;font-size:8px;">Intercession</span> &nbsp;Active</div></div></div>
+              <div class="mock-prayer-item"><div class="mock-prayer-dot" style="background:#C9A84C;"></div><div><div class="mock-prayer-text">Strength during exams</div><div class="mock-prayer-cat"><span class="mock-badge badge-gold" style="margin:0;padding:2px 6px;font-size:8px;">Petition</span> &nbsp;Answered \u2713</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="app-name-badge"><span class="cross-icon">\u2720</span> Daily Walk</div>
+    </div>
+
+    <!-- 3: BIBLE READER -->
+    <div class="screenshot bg-bible">
+      <div class="headline-area">
+        <h2>Read the Bible<br>Your Way</h2>
+        <p>Multiple translations, bookmarks, and beautiful typography</p>
+      </div>
+      <div class="phone-frame-outer">
+        <div class="phone-frame">
+          <div class="phone-status-bar">9:41</div>
+          <div class="mock-content">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+              <div class="mock-page-title">The Bible</div>
+              <span class="translation-badge">BSB</span>
+            </div>
+            <div class="book-nav"><div class="book-nav-btn">&lsaquo;</div><div class="book-nav-title">Psalm 23</div><div class="book-nav-btn">&rsaquo;</div></div>
+            <div class="mock-card" style="padding:16px;">
+              <div class="bible-text">
+                <span class="verse-num">1</span>The Lord is my shepherd; I shall not want. <span class="verse-num">2</span>He makes me lie down in green pastures. He leads me beside still waters. <span class="verse-num">3</span>He restores my soul. He leads me in paths of righteousness for his name&apos;s sake. <span class="verse-num">4</span>Even though I walk through the valley of the shadow of death, I will fear no evil, for you are with me; your rod and your staff, they comfort me. <span class="verse-num">5</span>You prepare a table before me in the presence of my enemies; you anoint my head with oil; my cup overflows. <span class="verse-num">6</span>Surely goodness and mercy shall follow me all the days of my life, and I shall dwell in the house of the Lord forever.
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:4px;">
+              <div style="flex:1;background:white;border:1px solid #EDE7DC;border-radius:8px;padding:6px 8px;text-align:center;font-size:9px;color:#6B5B4B;font-weight:500;">\u{1F4CB} Copy</div>
+              <div style="flex:1;background:white;border:1px solid #EDE7DC;border-radius:8px;padding:6px 8px;text-align:center;font-size:9px;color:#6B5B4B;font-weight:500;">\u{1F516} Bookmark</div>
+              <div style="flex:1;background:white;border:1px solid #EDE7DC;border-radius:8px;padding:6px 8px;text-align:center;font-size:9px;color:#6B5B4B;font-weight:500;">\u{1F4E4} Share</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="app-name-badge"><span class="cross-icon">\u2720</span> Daily Walk</div>
+    </div>
+
+    <!-- 4: SCRIPTURE MEMORY -->
+    <div class="screenshot bg-memory">
+      <div class="headline-area">
+        <h2>Memorize<br>God&apos;s Word</h2>
+        <p>Science-backed spaced repetition to hide Scripture in your heart</p>
+      </div>
+      <div class="phone-frame-outer">
+        <div class="phone-frame">
+          <div class="phone-status-bar">9:41</div>
+          <div class="mock-content">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+              <div class="mock-page-title">Memory Studio</div>
+              <div class="mock-streak-badge">\u{1F525} 5</div>
+            </div>
+            <div class="mock-subtitle">3 verses &bull; 1 due for review</div>
+            <div class="mock-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <div class="mock-badge badge-purple">Practice Mode</div>
+                <span style="font-size:9.5px;color:#8B7B6B;font-weight:500;">First Letter Hints</span>
+              </div>
+              <div class="mock-verse" style="font-size:13px;font-style:normal;letter-spacing:0.5px;">&ldquo;T____ i_ t__ w__, t__ t____, a__ t__ l___.<br>N_ o__ c____ t_ t__ F_____ e____ t______ m_.&rdquo;</div>
+              <div class="mock-ref" style="margin-top:6px;">John 14:6</div>
+              <div class="mock-progress-bar" style="margin-top:10px;"><div class="mock-progress-fill fill-purple" style="width:65%;"></div></div>
+              <div style="display:flex;justify-content:space-between;font-size:9.5px;color:#8B7B6B;margin-top:4px;"><span>Familiar</span><span>65%</span></div>
+            </div>
+            <div class="mock-grid-3">
+              <div class="mock-stat"><div class="mock-stat-num stat-purple">3</div><div class="mock-stat-label">Verses</div></div>
+              <div class="mock-stat"><div class="mock-stat-num stat-gold">5</div><div class="mock-stat-label">Day Streak</div></div>
+              <div class="mock-stat"><div class="mock-stat-num stat-green">1</div><div class="mock-stat-label">Due Today</div></div>
+            </div>
+            <div class="mock-card" style="margin-top:9px;">
+              <div class="section-label-small">Practice Modes</div>
+              <div style="display:flex;gap:5px;margin-top:4px;">
+                <div style="flex:1;background:#EDE4F5;border-radius:8px;padding:6px;text-align:center;font-size:9px;color:#6A4A8C;font-weight:600;">First Letter</div>
+                <div style="flex:1;background:#F5F0E8;border-radius:8px;padding:6px;text-align:center;font-size:9px;color:#8B7B6B;font-weight:500;">Fill Blank</div>
+                <div style="flex:1;background:#F5F0E8;border-radius:8px;padding:6px;text-align:center;font-size:9px;color:#8B7B6B;font-weight:500;">Full Recall</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="app-name-badge"><span class="cross-icon">\u2720</span> Daily Walk</div>
+    </div>
+
+    <!-- 5: GRATITUDE WALL -->
+    <div class="screenshot bg-gratitude">
+      <div class="headline-area">
+        <h2>Count Your<br>Blessings</h2>
+        <p>A beautiful wall of gratitude, praise, and thankfulness to God</p>
+      </div>
+      <div class="phone-frame-outer">
+        <div class="phone-frame">
+          <div class="phone-status-bar">9:41</div>
+          <div class="mock-content">
+            <div class="mock-page-title">Gratitude Wall</div>
+            <div class="mock-subtitle">8 entries &bull; This month</div>
+            <div class="mock-tabs" style="margin-bottom:9px;"><div class="mock-tab active">All</div><div class="mock-tab">Gratitude</div><div class="mock-tab">Praise</div></div>
+            <div class="mock-gratitude-card pastel-rose">Grateful for the beautiful sunrise this morning. God&apos;s creation never fails to amaze me. \u{1F305}<div style="font-size:8.5px;color:#8B7B6B;margin-top:5px;font-weight:500;">Gratitude &bull; Today</div></div>
+            <div class="mock-gratitude-card pastel-sky">Thank you Lord for the unexpected kindness from a stranger at the store today.<div style="font-size:8.5px;color:#8B7B6B;margin-top:5px;font-weight:500;">Praise &bull; Yesterday</div></div>
+            <div class="mock-gratitude-card pastel-emerald">My children&apos;s laughter is such a precious gift. Thank you for my family. \u{1F49A}<div style="font-size:8.5px;color:#8B7B6B;margin-top:5px;font-weight:500;">Gratitude &bull; 2 days ago</div></div>
+            <div class="mock-gratitude-card pastel-violet">&ldquo;Give thanks to the Lord, for he is good; his love endures forever.&rdquo; &mdash; Psalm 107:1<div style="font-size:8.5px;color:#8B7B6B;margin-top:5px;font-weight:500;">Worship &bull; 3 days ago</div></div>
+            <div class="mock-gratitude-card pastel-amber">Got the job I was praying about! God&apos;s timing is perfect.<div style="font-size:8.5px;color:#8B7B6B;margin-top:5px;font-weight:500;">Praise &bull; Last week</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="app-name-badge"><span class="cross-icon">\u2720</span> Daily Walk</div>
+    </div>
+
+    <!-- 6: READING PLANS -->
+    <div class="screenshot bg-reading">
+      <div class="headline-area">
+        <h2>Bible Reading<br>Plans</h2>
+        <p>Structured plans with daily passages and progress tracking</p>
+      </div>
+      <div class="phone-frame-outer">
+        <div class="phone-frame">
+          <div class="phone-status-bar">9:41</div>
+          <div class="mock-content">
+            <div class="mock-page-title">Reading Plans</div>
+            <div class="mock-subtitle">2 plans active &bull; 16% overall</div>
+            <div class="mock-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div><div style="font-size:13px;font-weight:600;color:#3D3328;">Bible in a Year</div><div style="font-size:9.5px;color:#8B7B6B;margin-top:2px;">365 days &bull; Day 63 of 365</div></div>
+                <div class="mock-streak-badge" style="font-size:10px;padding:3px 8px;">\u{1F525} 12</div>
+              </div>
+              <div class="mock-progress-bar" style="margin-top:10px;"><div class="mock-progress-fill fill-brown" style="width:17%;"></div></div>
+              <div style="display:flex;justify-content:space-between;font-size:9.5px;color:#8B7B6B;margin-top:4px;"><span>17% complete</span><span>Est. Dec 31</span></div>
+            </div>
+            <div class="mock-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div><div style="font-size:13px;font-weight:600;color:#3D3328;">Gospels in 30 Days</div><div style="font-size:9.5px;color:#8B7B6B;margin-top:2px;">30 days &bull; Day 22 of 30</div></div>
+              </div>
+              <div class="mock-progress-bar" style="margin-top:10px;"><div class="mock-progress-fill fill-brown" style="width:73%;"></div></div>
+              <div style="display:flex;justify-content:space-between;font-size:9.5px;color:#8B7B6B;margin-top:4px;"><span>73% complete</span><span>8 days left</span></div>
+            </div>
+            <div class="mock-card" style="text-align:center;padding:14px;">
+              <div style="font-size:24px;margin-bottom:3px;">\u{1F4D6}</div>
+              <div style="font-size:12px;font-weight:600;color:#3D3328;">Today&apos;s Reading</div>
+              <div style="font-size:10.5px;color:#6B5B4B;margin-top:4px;">Numbers 5-6 &bull; Mark 10:1-31</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="app-name-badge"><span class="cross-icon">\u2720</span> Daily Walk</div>
+    </div>
+
+    <!-- 7: GROWTH TRACKER -->
+    <div class="screenshot bg-growth">
+      <div class="headline-area">
+        <h2>Track Your<br>Spiritual Growth</h2>
+        <p>Weekly check-ins across five dimensions of your faith journey</p>
+      </div>
+      <div class="phone-frame-outer">
+        <div class="phone-frame">
+          <div class="phone-status-bar">9:41</div>
+          <div class="mock-content">
+            <div class="mock-page-title">Growth Tracker</div>
+            <div class="mock-subtitle">Week 10 &bull; Growing steadily</div>
+            <div class="mock-card">
+              <div class="section-label" style="margin-bottom:8px;">This Week&apos;s Check-In</div>
+              <div style="margin-bottom:7px;"><div style="display:flex;justify-content:space-between;font-size:10.5px;color:#6B5B4B;margin-bottom:3px;"><span>\u{1F64F} Prayer Life</span><span style="font-weight:600;">4/5</span></div><div class="mock-progress-bar"><div class="mock-progress-fill fill-teal" style="width:80%;"></div></div></div>
+              <div style="margin-bottom:7px;"><div style="display:flex;justify-content:space-between;font-size:10.5px;color:#6B5B4B;margin-bottom:3px;"><span>\u{1F4D6} Scripture</span><span style="font-weight:600;">5/5</span></div><div class="mock-progress-bar"><div class="mock-progress-fill fill-teal" style="width:100%;"></div></div></div>
+              <div style="margin-bottom:7px;"><div style="display:flex;justify-content:space-between;font-size:10.5px;color:#6B5B4B;margin-bottom:3px;"><span>\u{1F3B5} Worship</span><span style="font-weight:600;">3/5</span></div><div class="mock-progress-bar"><div class="mock-progress-fill fill-teal" style="width:60%;"></div></div></div>
+              <div style="margin-bottom:7px;"><div style="display:flex;justify-content:space-between;font-size:10.5px;color:#6B5B4B;margin-bottom:3px;"><span>\u{1F91D} Service</span><span style="font-weight:600;">4/5</span></div><div class="mock-progress-bar"><div class="mock-progress-fill fill-teal" style="width:80%;"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:10.5px;color:#6B5B4B;margin-bottom:3px;"><span>\u{1F465} Fellowship</span><span style="font-weight:600;">3/5</span></div><div class="mock-progress-bar"><div class="mock-progress-fill fill-teal" style="width:60%;"></div></div></div>
+            </div>
+            <div class="mock-grid-3">
+              <div class="mock-stat"><div class="mock-stat-num stat-teal">10</div><div class="mock-stat-label">Weeks</div></div>
+              <div class="mock-stat"><div class="mock-stat-num stat-gold">3.8</div><div class="mock-stat-label">Average</div></div>
+              <div class="mock-stat"><div class="mock-stat-num stat-green">\u2191</div><div class="mock-stat-label">Trending</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="app-name-badge"><span class="cross-icon">\u2720</span> Daily Walk</div>
+    </div>
+
+    <!-- 8: JOURNAL + PRIVACY -->
+    <div class="screenshot bg-journal">
+      <div class="headline-area">
+        <h2>Your Private<br>Faith Journal</h2>
+        <p>No ads. No tracking. Just you and God. 100% private.</p>
+      </div>
+      <div class="phone-frame-outer">
+        <div class="phone-frame">
+          <div class="phone-status-bar">9:41</div>
+          <div class="mock-content">
+            <div class="mock-page-title">My Journal</div>
+            <div class="mock-subtitle">March 2026 &bull; 5 entries</div>
+            <div class="mock-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <div class="section-label" style="margin:0;">Today&apos;s Entry</div>
+                <div style="font-size:16px;">\u{1F60A}</div>
+              </div>
+              <div style="font-size:11px;color:#3D3328;line-height:1.6;margin-bottom:6px;">God reminded me today that His grace is sufficient. Even on hard days, His love never fails. Feeling grateful for the small mercies...</div>
+              <div style="display:flex;gap:4px;"><span class="mock-badge badge-green" style="font-size:8px;">Faith</span><span class="mock-badge badge-gold" style="font-size:8px;">Proverbs 3:5</span></div>
+            </div>
+            <div class="mock-card" style="background:#F9F5EF;border-color:#EDE7DC;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div style="font-size:11px;font-weight:600;color:#3D3328;">Yesterday</div><div style="font-size:14px;">\u{1F64F}</div></div>
+              <div style="font-size:10.5px;color:#6B5B4B;line-height:1.5;">Spent extra time in prayer this morning. Feeling a growing closeness with God...</div>
+            </div>
+            <div class="mock-card" style="background:#F9F5EF;border-color:#EDE7DC;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div style="font-size:11px;font-weight:600;color:#3D3328;">March 1</div><div style="font-size:14px;">\u2728</div></div>
+              <div style="font-size:10.5px;color:#6B5B4B;line-height:1.5;">New month, new mercies. &ldquo;His compassions never fail. They are new every morning.&rdquo;</div>
+            </div>
+            <div style="margin-top:8px;text-align:center;padding:10px;background:#F0EDE8;border-radius:10px;">
+              <div style="font-size:9px;color:#8B7B6B;font-weight:600;letter-spacing:0.5px;">\u{1F512} YOUR DATA STAYS ON YOUR DEVICE</div>
+              <div style="font-size:8px;color:#A09080;margin-top:3px;">No ads &bull; No tracking &bull; No social media</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="app-name-badge"><span class="cross-icon">\u2720</span> Daily Walk</div>
+    </div>
+
+  </div>
+</div>
+
+</div>
+`,
+      }}
     />
   );
 }
