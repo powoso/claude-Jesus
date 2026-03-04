@@ -130,9 +130,9 @@ export default function LandingPage() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Download on the App Store"
-            className="transition-opacity hover:opacity-80"
+            className="block transition-opacity hover:opacity-80"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" width={150} height={50}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" width={150} height={50} className="pointer-events-none">
               <rect width="120" height="40" rx="6" fill="#000" />
               <g fill="#fff">
                 <path d="M24.77 20.3a4.95 4.95 0 0 1 2.36-4.15 5.07 5.07 0 0 0-3.99-2.16c-1.68-.18-3.31 1.01-4.17 1.01-.87 0-2.19-.99-3.61-.96a5.31 5.31 0 0 0-4.47 2.73c-1.93 3.34-.49 8.27 1.36 10.97.93 1.33 2.01 2.82 3.43 2.76 1.39-.06 1.91-.88 3.59-.88 1.67 0 2.15.88 3.59.85 1.49-.02 2.42-1.33 3.32-2.67a11 11 0 0 0 1.52-3.09 4.78 4.78 0 0 1-2.93-4.41zM22.04 12.21a4.87 4.87 0 0 0 1.12-3.49 4.96 4.96 0 0 0-3.21 1.66 4.64 4.64 0 0 0-1.14 3.37 4.11 4.11 0 0 0 3.23-1.54z" />
